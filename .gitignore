@@ -1,0 +1,16 @@
+# Build
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# Configuração local (contém senha do banco — NÃO subir)
+PDV_CAIXA/appsettings.json
