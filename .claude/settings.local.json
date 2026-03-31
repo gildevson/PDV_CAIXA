@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet add:*)",
+      "Bash(grep -E \"\\\\.\\(json|xml|sql|txt|md\\)$\")",
+      "Bash(mkdir -p /tmp/genhash)",
+      "Bash(dotnet new:*)",
+      "Bash(Program.cs:*)",
+      "Bash(dotnet run:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
