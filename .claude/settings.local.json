@@ -8,7 +8,14 @@
       "Bash(dotnet new:*)",
       "Bash(Program.cs:*)",
       "Bash(dotnet run:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"taskkill /IM PDV_CAIXA.exe /F\")",
+      "Bash(cmd /c \"taskkill /PID 10308 /F\")",
+      "Bash(cmd /c \"wmic process where name='PDV_CAIXA.exe' delete\" 2>&1)",
+      "Bash(cmd /c \"wmic process where name=''''PDV_CAIXA.exe'''' delete\")",
+      "Bash(cmd /c \"taskkill /PID 24640 /F\")",
+      "Bash(timeout /t 2)"
     ]
   }
 }

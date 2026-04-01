@@ -86,7 +86,7 @@ namespace PDV_CAIXA.Views {
             double escala = Math.Min((double)tamanhoMax / original.PixelWidth,
                                      (double)tamanhoMax / original.PixelHeight);
 
-            if (escala >= 1) return bytes; // já é menor, não precisa redimensionar
+            if (escala >= 1) return bytes;
 
             var scaled = new TransformedBitmap(original,
                 new ScaleTransform(escala, escala));
