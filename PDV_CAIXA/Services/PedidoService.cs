@@ -5,14 +5,15 @@ namespace PDV_CAIXA.Services {
     public class PedidoService {
         private readonly PedidoRepository _repo = new();
 
-        public void Finalizar(Guid usuarioId, IEnumerable<PedidoItem> itens) {
+        public void Finalizar(Guid usuarioId, IEnumerable<PedidoItem> itens, string formaPagamento) {
             var lista  = itens.ToList();
             var pedido = new Pedido {
-                Id        = Guid.NewGuid(),
-                Data      = DateTime.Now,
-                Total     = lista.Sum(i => i.Subtotal),
-                UsuarioId = usuarioId,
-                Status    = "finalizado"
+                Id             = Guid.NewGuid(),
+                Data           = DateTime.Now,
+                Total          = lista.Sum(i => i.Subtotal),
+                UsuarioId      = usuarioId,
+                Status         = "finalizado",
+                FormaPagamento = formaPagamento
             };
 
             foreach (var item in lista) {

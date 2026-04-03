@@ -6,7 +6,8 @@
         Height="580" Width="900"
         MinHeight="480" MinWidth="680"
         WindowStartupLocation="CenterScreen"
-        Background="#1E1E2E">
+        Background="#1E1E2E"
+        PreviewKeyDown="MainWindow_PreviewKeyDown">
 
     <Window.Resources>
         <conv:BytesToImageConverter x:Key="BytesToImage"/>
@@ -86,6 +87,21 @@
             <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="bd" Property="Background" Value="#33334A"/>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+        <ControlTemplate x:Key="NumpadBtn" TargetType="Button">
+            <Border x:Name="bd" Background="#252538" BorderBrush="#3A3A55" BorderThickness="1" CornerRadius="6">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="bd" Property="Background" Value="#2A2A48"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter TargetName="bd" Property="Background" Value="#7C83FF"/>
+                    <Setter TargetName="bd" Property="BorderBrush" Value="#7C83FF"/>
                 </Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -206,6 +222,16 @@
                             Content="📦  Produtos"
                             Style="{StaticResource MenuButton}"
                             Click="BtnMenuProdutos_Click"/>
+
+                    <Button x:Name="btnMenuHistorico"
+                            Content="📋  Histórico"
+                            Style="{StaticResource MenuButton}"
+                            Click="BtnMenuHistorico_Click"/>
+
+                    <Button x:Name="btnMenuPedidos"
+                            Content="🔎  Pesq. Pedido"
+                            Style="{StaticResource MenuButton}"
+                            Click="BtnMenuPedidos_Click"/>
 
                     <Button x:Name="btnMenuUsuarios"
                             Content="👥  Usuários"
@@ -414,9 +440,14 @@
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Opacity" Value="1"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                                         <Setter Property="Background" Value="#252538"/>
+                                                    </DataTrigger>
+                                                    <!-- Escurece produtos sem estoque -->
+                                                    <DataTrigger Binding="{Binding Estoque}" Value="0">
+                                                        <Setter Property="Opacity" Value="0.45"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -473,10 +504,30 @@
                                                     </TextBlock>
                                                 </StackPanel>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="2"
-                                                       Text="{Binding PrecoTexto}"
-                                                       Foreground="#7C83FF" FontSize="14"
-                                                       FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <!-- Preço ou badge sem estoque -->
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding PrecoTexto}"
+                                                           Foreground="#7C83FF" FontSize="14"
+                                                           FontWeight="Bold" HorizontalAlignment="Right"/>
+                                                <!-- Badge "SEM ESTOQUE" visível só quando Estoque = 0 -->
+                                                <Border CornerRadius="4" Background="#3A1010"
+                                                        BorderBrush="#662222" BorderThickness="1"
+                                                        Padding="5,2" Margin="0,3,0,0"
+                                                        HorizontalAlignment="Right">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Estoque}" Value="0">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="SEM ESTOQUE" FontSize="9"
+                                                               FontWeight="Bold" Foreground="#FF5555"/>
+                                                </Border>
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -719,98 +770,115 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Gerenciar Produtos"
-                           FontSize="20" FontWeight="Bold"
-                           Foreground="#E0E0E0" Margin="0,0,0,16"/>
-
-                <!-- Barra: botão + busca -->
-                <Grid Grid.Row="1" Margin="0,0,0,12">
+                <!-- ── Cabeçalho ── -->
+                <Grid Grid.Row="0" Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-
-                    <Button Grid.Column="0" Content="+ Novo Produto"
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="📦" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Gerenciar Produtos"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="#E0E0E0" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A3E" CornerRadius="10" Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="txtContadorProdutos" Text="0 produtos"
+                                       FontSize="12" Foreground="#7C83FF" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="+ Novo Produto"
                             Height="36" Padding="16,0"
                             FontSize="13" FontWeight="SemiBold"
                             Background="#7C83FF" Foreground="White"
                             BorderThickness="0" Cursor="Hand"
-                            Margin="0,0,10,0"
                             Click="BtnNovoProduto_Click">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                                    <ContentPresenter HorizontalAlignment="Center"
-                                                      VerticalAlignment="Center"
-                                                      Margin="{TemplateBinding Padding}"/>
+                                <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#6970E0"/>
+                                        <Setter TargetName="bd" Property="Background" Value="#6970E0"/>
                                     </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-
-                    <TextBox Grid.Column="1" x:Name="txtBuscaProduto"
-                             Height="36" FontSize="13" Padding="12,0"
-                             Background="#252538" Foreground="#E0E0E0"
-                             CaretBrush="#7C83FF" BorderBrush="#3A3A55"
-                             BorderThickness="1.5" VerticalContentAlignment="Center"
-                             TextChanged="TxtBuscaProduto_TextChanged">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox">
-                                <Style.Triggers>
-                                    <Trigger Property="IsFocused" Value="True">
-                                        <Setter Property="BorderBrush" Value="#7C83FF"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
-
-                    <TextBlock Grid.Column="1" Text="🔍  Buscar por nome ou código..."
-                               Foreground="#44475A" FontSize="12"
-                               IsHitTestVisible="False"
-                               VerticalAlignment="Center" Margin="14,0,0,0">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Text, ElementName=txtBuscaProduto}" Value="">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
-                        <TextBlock x:Name="txtFiltroAtivo" Text="Todos" Foreground="#7C83FF"
-                                   FontSize="11" FontWeight="SemiBold"
-                                   VerticalAlignment="Center" Cursor="Hand"
-                                   Margin="0,0,10,0"
-                                   MouseLeftButtonDown="FiltroAtivo_Click"/>
-                    </StackPanel>
                 </Grid>
 
-                <!-- Contador -->
-                <TextBlock Grid.Row="2" x:Name="txtContadorProdutos"
-                           Foreground="#6C6F85" FontSize="11"
-                           Margin="0,0,0,8"/>
+                <!-- ── Barra de busca + filtro ── -->
+                <Grid Grid.Row="1" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- DataGrid -->
+                    <Border Grid.Column="0" Background="#1A1A2E" BorderBrush="#2A2A3E"
+                            BorderThickness="1" CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔍" FontSize="14"
+                                       VerticalAlignment="Center" Margin="12,0,6,0" Foreground="#6C6F85"/>
+                            <TextBox Grid.Column="1" x:Name="txtBuscaProduto"
+                                     Background="Transparent" BorderThickness="0"
+                                     Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                     FontSize="14" Padding="0,10"
+                                     VerticalContentAlignment="Center"
+                                     TextChanged="TxtBuscaProduto_TextChanged">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Style.Resources>
+                                            <VisualBrush x:Key="HintP" TileMode="None" Opacity="0.4" Stretch="None" AlignmentX="Left">
+                                                <VisualBrush.Visual>
+                                                    <TextBlock Text="Buscar por nome ou código..." Foreground="#6C6F85" FontSize="14"/>
+                                                </VisualBrush.Visual>
+                                            </VisualBrush>
+                                        </Style.Resources>
+                                        <Style.Triggers>
+                                            <Trigger Property="Text" Value="">
+                                                <Setter Property="Background" Value="{StaticResource HintP}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- Filtro Ativo/Todos -->
+                    <Border Grid.Column="2" Background="#1A1A2E" BorderBrush="#2A2A3E"
+                            BorderThickness="1" CornerRadius="8" Padding="14,0" Cursor="Hand"
+                            MouseLeftButtonDown="FiltroAtivo_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="⚙" FontSize="13" Foreground="#6C6F85" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="txtFiltroAtivo" Text="Todos"
+                                       Foreground="#7C83FF" FontSize="12" FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- ── Separador ── -->
+                <Border Grid.Row="2" Height="1" Background="#2A2A3E" Margin="0,0,0,0"/>
+
+                <!-- ── DataGrid ── -->
                 <DataGrid Grid.Row="3" x:Name="dgProdutos"
                           AutoGenerateColumns="False"
                           Background="#13131F"
                           RowBackground="#1A1A2E"
                           AlternatingRowBackground="#1E1E2E"
                           Foreground="#E0E0E0"
-                          BorderBrush="#2A2A3E"
+                          BorderThickness="0"
                           GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#2A2A3E"
+                          HorizontalGridLinesBrush="#22223A"
                           CanUserAddRows="False"
                           IsReadOnly="True"
                           SelectionMode="Single"
@@ -819,33 +887,55 @@
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="Background" Value="#13131F"/>
                             <Setter Property="Foreground" Value="#7C83FF"/>
+                            <Setter Property="FontSize" Value="12"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="8,6"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,2"/>
                             <Setter Property="BorderBrush" Value="#2A2A3E"/>
                         </Style>
                     </DataGrid.ColumnHeaderStyle>
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
+                            <Setter Property="Height" Value="52"/>
+                            <Setter Property="Background" Value="#1A1A2E"/>
                             <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#22223E"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#2A2A5A"/>
+                                </Trigger>
                                 <DataTrigger Binding="{Binding Ativo}" Value="False">
                                     <Setter Property="Opacity" Value="0.45"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.RowStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="#E0E0E0"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
                     <DataGrid.Columns>
                         <!-- Foto/Iniciais -->
-                        <DataGridTemplateColumn Header="" Width="52" CanUserResize="False">
+                        <DataGridTemplateColumn Header="" Width="58" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border Width="34" Height="34" CornerRadius="6"
-                                            Margin="6,3" ClipToBounds="True"
+                                    <Border Width="38" Height="38" CornerRadius="8"
+                                            Margin="6,0" ClipToBounds="True"
                                             HorizontalAlignment="Center">
                                         <Grid>
                                             <Border Background="#2A2A3E">
                                                 <TextBlock Text="{Binding Iniciais}"
-                                                           FontSize="11" FontWeight="Bold"
+                                                           FontSize="13" FontWeight="Bold"
                                                            Foreground="#7C83FF"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
@@ -858,49 +948,123 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Nome"         Binding="{Binding Nome}"         Width="*"/>
-                        <DataGridTextColumn Header="Cód. Barras"  Binding="{Binding CodigoBarras}"  Width="130"/>
-                        <DataGridTextColumn Header="Preço"        Binding="{Binding PrecoTexto}"    Width="90"/>
-                        <DataGridTextColumn Header="Estoque"      Binding="{Binding EstoqueTexto}"  Width="80"/>
-                        <DataGridTextColumn Header="Situação"     Binding="{Binding AtivoTexto}"    Width="80"/>
-                        <DataGridTemplateColumn Header="Ações" Width="120">
+                        <!-- Nome -->
+                        <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontSize" Value="14"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="#E0E0E0"/>
+                                    <Setter Property="Margin" Value="4,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Cód. Barras -->
+                        <DataGridTextColumn Header="Cód. Barras" Binding="{Binding CodigoBarras}" Width="140">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Foreground" Value="#6C6F85"/>
+                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                    <Setter Property="Margin" Value="4,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Preço -->
+                        <DataGridTextColumn Header="Preço" Binding="{Binding PrecoTexto}" Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontSize" Value="14"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="#50FA7B"/>
+                                    <Setter Property="Margin" Value="4,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Estoque -->
+                        <DataGridTextColumn Header="Estoque" Binding="{Binding EstoqueTexto}" Width="90">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontSize" Value="13"/>
+                                    <Setter Property="Foreground" Value="#C0C0E0"/>
+                                    <Setter Property="Margin" Value="4,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Situação badge -->
+                        <DataGridTemplateColumn Header="Situação" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="4,2">
-                                        <Button Content="Editar"
-                                                Tag="{Binding}"
-                                                Height="26" Padding="10,0" FontSize="11"
-                                                Background="#44475A" Foreground="White"
+                                    <Border x:Name="badgeSit" CornerRadius="6"
+                                            Padding="10,4" HorizontalAlignment="Left"
+                                            VerticalAlignment="Center" Margin="6,0"
+                                            Background="#2A5A3A">
+                                        <TextBlock x:Name="txtSit" Text="Ativo"
+                                                   FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="White" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                            <Setter TargetName="badgeSit" Property="Background" Value="#5A1A1A"/>
+                                            <Setter TargetName="txtSit" Property="Text" Value="Inativo"/>
+                                            <Setter TargetName="txtSit" Property="Foreground" Value="#FF9090"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Ações -->
+                        <DataGridTemplateColumn Header="Ações" Width="195" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="6,0" VerticalAlignment="Center">
+                                        <Button Tag="{Binding}"
+                                                Height="32" Padding="12,0" FontSize="12"
+                                                Background="#3A3A5A" Foreground="#C0C0E0"
                                                 BorderThickness="0" Cursor="Hand"
-                                                Margin="0,0,6,0"
+                                                Margin="0,0,8,0"
                                                 Click="BtnEditarProduto_Click">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                                                        <StackPanel Orientation="Horizontal" Margin="{TemplateBinding Padding}" VerticalAlignment="Center">
+                                                            <TextBlock Text="✏" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Editar" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#6C6F85"/>
+                                                            <Setter TargetName="bd" Property="Background" Value="#5A5A8A"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
                                             </Button.Template>
                                         </Button>
-                                        <Button Content="Excluir"
-                                                Tag="{Binding}"
-                                                Height="26" Padding="10,0" FontSize="11"
-                                                Background="#FF5555" Foreground="White"
+                                        <Button Tag="{Binding}"
+                                                Height="32" Padding="12,0" FontSize="12"
+                                                Background="#5A1A1A" Foreground="#FF9090"
                                                 BorderThickness="0" Cursor="Hand"
                                                 Click="BtnExcluirProduto_Click">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                                                        <StackPanel Orientation="Horizontal" Margin="{TemplateBinding Padding}" VerticalAlignment="Center">
+                                                            <TextBlock Text="🗑" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Excluir" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#CC3333"/>
+                                                            <Setter TargetName="bd" Property="Background" Value="#882222"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -914,51 +1078,751 @@
                 </DataGrid>
             </Grid>
 
+            <!-- ══════════════ PÁGINA: HISTÓRICO ══════════════ -->
+            <Grid x:Name="pageHistorico" Visibility="Collapsed" Margin="28">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*" MinHeight="120"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="180" MinHeight="100"/>
+                </Grid.RowDefinitions>
+
+                <!-- Título -->
+                <TextBlock Grid.Row="0" Text="Histórico de Pedidos"
+                           FontSize="20" FontWeight="Bold"
+                           Foreground="#E0E0E0" Margin="0,0,0,16"/>
+
+                <!-- Cards de resumo -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,16">
+                    <Border Background="#1A1A2E" BorderBrush="#2A2A3E" BorderThickness="1"
+                            CornerRadius="8" Padding="18,12" Margin="0,0,12,0" MinWidth="160">
+                        <StackPanel>
+                            <TextBlock Text="PEDIDOS" Foreground="#6C6F85"
+                                       FontSize="10" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="histTxtQtdPedidos" Text="—"
+                                       FontSize="26" FontWeight="Bold"
+                                       Foreground="#7C83FF" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#1A1A2E" BorderBrush="#2A2A3E" BorderThickness="1"
+                            CornerRadius="8" Padding="18,12" MinWidth="200">
+                        <StackPanel>
+                            <TextBlock Text="FATURAMENTO" Foreground="#6C6F85"
+                                       FontSize="10" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="histTxtFaturamento" Text="—"
+                                       FontSize="26" FontWeight="Bold"
+                                       Foreground="#50FA7B" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Filtros de período -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,14">
+                    <TextBlock Text="PERÍODO:" Foreground="#6C6F85"
+                               FontSize="10" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <Border x:Name="histFiltroHoje" Background="#2A2A3E" CornerRadius="6"
+                            Padding="12,5" Margin="0,0,6,0" Cursor="Hand"
+                            MouseLeftButtonDown="HistFiltro_Click">
+                        <TextBlock Text="Hoje" Foreground="#7C83FF" FontSize="12" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border x:Name="histFiltroSemana" Background="#1A1A2E" CornerRadius="6"
+                            Padding="12,5" Margin="0,0,6,0" Cursor="Hand"
+                            MouseLeftButtonDown="HistFiltro_Click">
+                        <TextBlock Text="Semana" Foreground="#A0A0C0" FontSize="12"/>
+                    </Border>
+                    <Border x:Name="histFiltroMes" Background="#1A1A2E" CornerRadius="6"
+                            Padding="12,5" Margin="0,0,6,0" Cursor="Hand"
+                            MouseLeftButtonDown="HistFiltro_Click">
+                        <TextBlock Text="Mês" Foreground="#A0A0C0" FontSize="12"/>
+                    </Border>
+                    <Border x:Name="histFiltroTodos" Background="#1A1A2E" CornerRadius="6"
+                            Padding="12,5" Margin="0,0,16,0" Cursor="Hand"
+                            MouseLeftButtonDown="HistFiltro_Click">
+                        <TextBlock Text="Todos" Foreground="#A0A0C0" FontSize="12"/>
+                    </Border>
+                    <TextBlock x:Name="histTxtContador"
+                               Foreground="#44475A" FontSize="11"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- DataGrid de pedidos -->
+                <DataGrid Grid.Row="3" x:Name="histDgPedidos"
+                          AutoGenerateColumns="False"
+                          Background="#13131F" RowBackground="#1A1A2E"
+                          AlternatingRowBackground="#181828"
+                          Foreground="#E0E0E0" BorderBrush="#2A2A3E" BorderThickness="1"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#25253A"
+                          CanUserAddRows="False" IsReadOnly="True"
+                          SelectionMode="Single" HeadersVisibility="Column"
+                          SelectionChanged="HistDgPedidos_SelectionChanged">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#13131F"/>
+                            <Setter Property="Foreground" Value="#7C83FF"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                            <Setter Property="BorderBrush" Value="#2A2A3E"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Height" Value="44"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#2A2A5A"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#22223E"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#"     Binding="{Binding NumeroTexto}" Width="70">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#7C83FF"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Margin" Value="10,0,0,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Data"  Binding="{Binding DataTexto}"  Width="145">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock"><Setter Property="Margin" Value="4,0"/></Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Total" Binding="{Binding TotalTexto}" Width="115">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#50FA7B"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Margin" Value="4,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- Status badge -->
+                        <DataGridTemplateColumn Header="Status" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="4" Padding="8,4"
+                                            HorizontalAlignment="Left" Margin="4,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#44475A"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="finalizado">
+                                                        <Setter Property="Background" Value="#00843A"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="cancelado">
+                                                        <Setter Property="Background" Value="#AA2222"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding Status}"
+                                                   Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Pagamento" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="4" Padding="8,3"
+                                            HorizontalAlignment="Left" Margin="4,2">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#44475A"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding FormaPagamento}" Value="pix">
+                                                        <Setter Property="Background" Value="#00843A"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding FormaPagamento}" Value="dinheiro">
+                                                        <Setter Property="Background" Value="#1A5FA8"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding FormaPagamento}" Value="credito">
+                                                        <Setter Property="Background" Value="#A06010"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding FormaPagamento}" Value="debito">
+                                                        <Setter Property="Background" Value="#4A50C0"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding PagamentoTexto}"
+                                                   Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Operador"  Binding="{Binding Operador}"      Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Separador de itens -->
+                <Border Grid.Row="4" Background="#0F0F1A" Padding="0,8"
+                        BorderBrush="#2A2A3E" BorderThickness="0,1,0,0" Margin="0,4,0,0">
+                    <TextBlock x:Name="histTxtDetalhe"
+                               Text="Selecione um pedido para ver os itens"
+                               Foreground="#6C6F85" FontSize="11" FontWeight="SemiBold"/>
+                </Border>
+
+                <!-- DataGrid de itens do pedido selecionado -->
+                <DataGrid Grid.Row="5" x:Name="histDgItens"
+                          AutoGenerateColumns="False"
+                          Background="#13131F" RowBackground="#13131F"
+                          AlternatingRowBackground="#1A1A2E"
+                          Foreground="#E0E0E0" BorderBrush="#2A2A3E" BorderThickness="0,1,0,0"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#2A2A3E"
+                          CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#0F0F1A"/>
+                            <Setter Property="Foreground" Value="#6C6F85"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="FontSize" Value="11"/>
+                            <Setter Property="Padding" Value="8,5"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="#2A2A3E"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Produto"      Binding="{Binding NomeProduto}"        Width="*"/>
+                        <DataGridTextColumn Header="Qtd"          Binding="{Binding Quantidade}"         Width="55"/>
+                        <DataGridTextColumn Header="Preço Unit."  Binding="{Binding PrecoUnitarioTexto}" Width="110"/>
+                        <DataGridTextColumn Header="Subtotal"     Binding="{Binding SubtotalTexto}"      Width="110"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <!-- ══════════════ PÁGINA: PEDIDOS ══════════════ -->
+            <Grid x:Name="pagePedidos" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="290" MinWidth="240"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ── ESQUERDA: Painel de Pesquisa ── -->
+                <Border Grid.Column="0" Background="#13131F"
+                        BorderBrush="#2A2A3E" BorderThickness="0,0,1,0">
+                    <DockPanel>
+
+                        <!-- Cabeçalho -->
+                        <Border DockPanel.Dock="Top" Background="#0F0F1A" Padding="16,12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔎" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="PESQUISA DE PEDIDOS"
+                                               Foreground="#7C83FF" FontSize="12" FontWeight="Bold"/>
+                                    <TextBlock Text="Busque por ID ou número sequencial"
+                                               Foreground="#44475A" FontSize="10" Margin="0,1,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Botões fixos no rodapé -->
+                        <Border DockPanel.Dock="Bottom" Background="#0F0F1A"
+                                Padding="12,10" BorderBrush="#2A2A3E" BorderThickness="0,1,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="Limpar / Recentes"
+                                        Height="36" FontSize="11" FontWeight="SemiBold"
+                                        Foreground="#A0A0C0" Cursor="Hand"
+                                        Template="{StaticResource PdvBtnSecundario}"
+                                        Click="PedidosBtnLimpar_Click"/>
+                                <Button Grid.Column="2" Content="🔍  Buscar"
+                                        Height="36" Padding="20,0" FontSize="12" FontWeight="Bold"
+                                        Foreground="White" Cursor="Hand"
+                                        Template="{StaticResource PdvBtnPrimario}"
+                                        Click="PedidosNumpadBuscar_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Conteúdo rolável -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Margin="12,14,12,8">
+
+                                <!-- Busca por ID (UUID) -->
+                                <TextBlock Text="ID DO PEDIDO (UUID)"
+                                           Foreground="#6C6F85" FontSize="10" FontWeight="SemiBold"
+                                           Margin="0,0,0,5"/>
+                                <TextBox x:Name="pedidosTxtBuscaId"
+                                         Height="40" FontSize="12" Padding="10,0"
+                                         Background="#1A1A2E" Foreground="#E0E0E0"
+                                         CaretBrush="#7C83FF" BorderBrush="#2A2A3E" BorderThickness="1.5"
+                                         VerticalContentAlignment="Center"
+                                         FontFamily="Consolas"
+                                         KeyDown="PedidosTxtBuscaId_KeyDown">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsFocused" Value="True">
+                                                    <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <!-- Separador OU -->
+                                <Grid Margin="0,16,0,16">
+                                    <Rectangle Fill="#2A2A3E" Height="1" VerticalAlignment="Center"/>
+                                    <Border Background="#13131F" HorizontalAlignment="Center" Padding="10,0">
+                                        <TextBlock Text="OU PELO NÚMERO"
+                                                   Foreground="#44475A" FontSize="10" FontWeight="SemiBold"/>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Display numérico -->
+                                <Border Background="#1A1A2E" BorderBrush="#2A2A3E" BorderThickness="1.5"
+                                        CornerRadius="8" Height="58" Margin="0,0,0,10">
+                                    <Grid>
+                                        <TextBlock x:Name="pedidosTxtNumero"
+                                                   FontSize="30" FontWeight="Bold"
+                                                   FontFamily="Consolas"
+                                                   Foreground="#7C83FF"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                        <!-- Placeholder quando vazio -->
+                                        <TextBlock Text="_ _ _ _"
+                                                   FontSize="22" FontWeight="Bold"
+                                                   FontFamily="Consolas"
+                                                   Foreground="#2A2A3E"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Text, ElementName=pedidosTxtNumero}" Value="">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Teclado numérico -->
+                                <UniformGrid Rows="4" Columns="3">
+                                    <Button Content="7" Tag="7" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+                                    <Button Content="8" Tag="8" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+                                    <Button Content="9" Tag="9" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+
+                                    <Button Content="4" Tag="4" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+                                    <Button Content="5" Tag="5" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+                                    <Button Content="6" Tag="6" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+
+                                    <Button Content="1" Tag="1" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+                                    <Button Content="2" Tag="2" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+                                    <Button Content="3" Tag="3" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+
+                                    <Button Content="⌫" Height="52" Margin="3"
+                                            FontSize="20" Foreground="#FF6B6B" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpadDel_Click"/>
+                                    <Button Content="0" Tag="0" Height="52" Margin="3"
+                                            FontSize="20" FontWeight="Bold" Foreground="#E0E0E0" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpad_Click"/>
+                                    <Button Content="↵" Height="52" Margin="3"
+                                            FontSize="22" Foreground="#7C83FF" Cursor="Hand"
+                                            Template="{StaticResource NumpadBtn}" Click="PedidosNumpadBuscar_Click"/>
+                                </UniformGrid>
+
+                            </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+
+                <!-- ── DIREITA: Resultados ── -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" MinHeight="120"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="190" MinHeight="120"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Cabeçalho + DataGrid de pedidos -->
+                    <DockPanel Grid.Row="0">
+                        <Border DockPanel.Dock="Top" Background="#0F0F1A" Padding="16,9">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="PEDIDOS" Foreground="#7C83FF"
+                                           FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="pedidosTxtContador"
+                                           Foreground="#44475A" FontSize="11"
+                                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <DataGrid x:Name="dgPedidos"
+                                  AutoGenerateColumns="False"
+                                  Background="#1E1E2E" RowBackground="#1A1A2E"
+                                  AlternatingRowBackground="#181828"
+                                  Foreground="#E0E0E0" BorderBrush="#2A2A3E" BorderThickness="0"
+                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#25253A"
+                                  CanUserAddRows="False" IsReadOnly="True"
+                                  SelectionMode="Single" HeadersVisibility="Column"
+                                  SelectionChanged="DgPedidos_SelectionChanged">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#13131F"/>
+                                    <Setter Property="Foreground" Value="#7C83FF"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Padding" Value="10,8"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                                    <Setter Property="BorderBrush" Value="#2A2A3E"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Height" Value="44"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#2A2A5A"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#22223E"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            <Setter Property="BorderBrush" Value="Transparent"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.CellStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="#"     Binding="{Binding NumeroTexto}" Width="70">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#7C83FF"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                            <Setter Property="Margin" Value="10,0,0,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Data"     Binding="{Binding DataTexto}"  Width="135">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock"><Setter Property="Margin" Value="4,0"/></Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Total"    Binding="{Binding TotalTexto}" Width="110">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#50FA7B"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Margin" Value="4,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <!-- Status badge -->
+                                <DataGridTemplateColumn Header="Status" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="4" Padding="8,4"
+                                                    HorizontalAlignment="Left" Margin="4,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#44475A"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="finalizado">
+                                                                <Setter Property="Background" Value="#00843A"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="cancelado">
+                                                                <Setter Property="Background" Value="#AA2222"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding Status}"
+                                                           Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <!-- Pagamento badge -->
+                                <DataGridTemplateColumn Header="Pagamento" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="4" Padding="8,4"
+                                                    HorizontalAlignment="Left" Margin="4,0">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#44475A"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding FormaPagamento}" Value="pix">
+                                                                <Setter Property="Background" Value="#00843A"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding FormaPagamento}" Value="dinheiro">
+                                                                <Setter Property="Background" Value="#1A5FA8"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding FormaPagamento}" Value="credito">
+                                                                <Setter Property="Background" Value="#A06010"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding FormaPagamento}" Value="debito">
+                                                                <Setter Property="Background" Value="#4A50C0"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <TextBlock Text="{Binding PagamentoTexto}"
+                                                           Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Operador" Binding="{Binding Operador}" Width="*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock"><Setter Property="Margin" Value="4,0"/></Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+
+                    <!-- Separador + label de itens -->
+                    <Border Grid.Row="1" Background="#0F0F1A" Padding="16,8"
+                            BorderBrush="#2A2A3E" BorderThickness="0,2,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="pedidosTxtDetalhe"
+                                       Text="Selecione um pedido para ver os itens"
+                                       Foreground="#6C6F85" FontSize="12" FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Itens: DataGrid + estado vazio -->
+                    <Grid Grid.Row="2">
+                        <DataGrid x:Name="dgItensPedido"
+                                  AutoGenerateColumns="False"
+                                  Background="#13131F" RowBackground="#13131F"
+                                  AlternatingRowBackground="#191928"
+                                  Foreground="#E0E0E0" BorderBrush="#2A2A3E" BorderThickness="0"
+                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#25253A"
+                                  CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#0F0F1A"/>
+                                    <Setter Property="Foreground" Value="#6C6F85"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                    <Setter Property="Padding" Value="10,7"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#2A2A3E"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Height" Value="38"/>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderBrush" Value="Transparent"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.CellStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Produto"      Binding="{Binding NomeProduto}"        Width="*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Margin" Value="10,0,0,0"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Qtd"          Binding="{Binding Quantidade}"         Width="55">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                            <Setter Property="Foreground" Value="#A0A0C0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Preço Unit."  Binding="{Binding PrecoUnitarioTexto}" Width="110">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock"><Setter Property="Margin" Value="4,0"/></Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Subtotal"     Binding="{Binding SubtotalTexto}"      Width="110">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#50FA7B"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Margin" Value="4,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Estado vazio -->
+                        <StackPanel x:Name="pedidosItensVazio"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="☝" FontSize="36"
+                                       HorizontalAlignment="Center" Foreground="#2A2A3E"/>
+                            <TextBlock Text="Selecione um pedido acima"
+                                       Foreground="#3A3A55" FontSize="12"
+                                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+
             <!-- Página: Usuários -->
             <Grid x:Name="pageUsuarios" Visibility="Collapsed" Margin="28">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Gerenciar Usuários"
-                           FontSize="20" FontWeight="Bold"
-                           Foreground="#E0E0E0" Margin="0,0,0,16"/>
+                <!-- ── Cabeçalho ── -->
+                <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="👥" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Gerenciar Usuários"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="#E0E0E0" VerticalAlignment="Center"/>
+                        <Border Background="#2A2A3E" CornerRadius="10" Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="txtUsuarioContador" Text="0 usuários"
+                                       FontSize="12" Foreground="#7C83FF" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="+ Novo Usuário"
+                            Height="36" Padding="16,0"
+                            FontSize="13" FontWeight="SemiBold"
+                            Background="#7C83FF" Foreground="White"
+                            BorderThickness="0" Cursor="Hand"
+                            Click="BtnNovoUsuario_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#6970E0"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
 
-                <Button Grid.Row="1" Content="+ Novo Usuário"
-                        HorizontalAlignment="Left"
-                        Height="36" Padding="16,0"
-                        FontSize="13" FontWeight="SemiBold"
-                        Background="#7C83FF" Foreground="White"
-                        BorderThickness="0" Cursor="Hand"
-                        Margin="0,0,0,12"
-                        Click="BtnNovoUsuario_Click">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                                <ContentPresenter HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  Margin="{TemplateBinding Padding}"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#6970E0"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
+                <!-- ── Barra de busca ── -->
+                <Border Grid.Row="1" Background="#1A1A2E" BorderBrush="#2A2A3E"
+                        BorderThickness="1" CornerRadius="8" Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="🔍" FontSize="14"
+                                   VerticalAlignment="Center" Margin="12,0,6,0" Foreground="#6C6F85"/>
+                        <TextBox Grid.Column="1" x:Name="txtBuscaUsuario"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                 FontSize="14" Padding="0,10"
+                                 VerticalContentAlignment="Center"
+                                 TextChanged="TxtBuscaUsuario_TextChanged">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox">
+                                    <Style.Resources>
+                                        <VisualBrush x:Key="Hint" TileMode="None" Opacity="0.4" Stretch="None" AlignmentX="Left">
+                                            <VisualBrush.Visual>
+                                                <TextBlock Text="Buscar por nome..." Foreground="#6C6F85" FontSize="14"/>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </Style.Resources>
+                                    <Style.Triggers>
+                                        <Trigger Property="Text" Value="">
+                                            <Setter Property="Background" Value="{StaticResource Hint}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
+                </Border>
 
-                <DataGrid Grid.Row="2" x:Name="dgUsuarios"
+                <!-- ── Separador ── -->
+                <Border Grid.Row="2" Height="1" Background="#2A2A3E" Margin="0,0,0,0"/>
+
+                <DataGrid Grid.Row="3" x:Name="dgUsuarios"
                           AutoGenerateColumns="False"
                           Background="#13131F"
                           RowBackground="#1A1A2E"
                           AlternatingRowBackground="#1E1E2E"
                           Foreground="#E0E0E0"
-                          BorderBrush="#2A2A3E"
+                          BorderThickness="0"
                           GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#2A2A3E"
+                          HorizontalGridLinesBrush="#22223A"
                           CanUserAddRows="False"
                           IsReadOnly="True"
                           SelectionMode="Single"
@@ -967,30 +1831,56 @@
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="Background" Value="#13131F"/>
                             <Setter Property="Foreground" Value="#7C83FF"/>
+                            <Setter Property="FontSize" Value="12"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="8,6"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,2"/>
                             <Setter Property="BorderBrush" Value="#2A2A3E"/>
                         </Style>
                     </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Height" Value="52"/>
+                            <Setter Property="Background" Value="#1A1A2E"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#22223E"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#2A2A5A"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="#E0E0E0"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
                     <DataGrid.Columns>
                         <!-- Avatar -->
-                        <DataGridTemplateColumn Header="" Width="52" CanUserResize="False">
+                        <DataGridTemplateColumn Header="" Width="58" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border Width="34" Height="34" CornerRadius="17"
-                                            Margin="6,3" ClipToBounds="True"
+                                    <Border Width="38" Height="38" CornerRadius="19"
+                                            Margin="6,0" ClipToBounds="True"
                                             HorizontalAlignment="Center">
                                         <Grid>
-                                            <!-- Placeholder com iniciais -->
                                             <Border Background="#2A2A3E">
                                                 <TextBlock Text="{Binding Iniciais}"
-                                                           FontSize="12" FontWeight="Bold"
+                                                           FontSize="13" FontWeight="Bold"
                                                            Foreground="#7C83FF"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
                                             </Border>
-                                            <!-- Foto real -->
                                             <Image Stretch="UniformToFill"
                                                    Source="{Binding Foto, Converter={StaticResource BytesToImage}}"/>
                                         </Grid>
@@ -999,36 +1889,74 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Nome"   Binding="{Binding Nome}"   Width="*"/>
-                        <DataGridTextColumn Header="Perfil" Binding="{Binding Perfil}" Width="110"/>
-                        <DataGridTemplateColumn Header="Ações" Width="150">
+                        <!-- Nome -->
+                        <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontSize" Value="14"/>
+                                    <Setter Property="Foreground" Value="#E0E0E0"/>
+                                    <Setter Property="Margin" Value="4,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Perfil badge -->
+                        <DataGridTemplateColumn Header="Perfil" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="4,2">
-                                        <Button Content="Editar"
-                                                Tag="{Binding}"
-                                                Height="26" Padding="10,0" FontSize="11"
-                                                Background="#44475A" Foreground="White"
+                                    <Border x:Name="badgePerfil" CornerRadius="6"
+                                            Padding="10,4" HorizontalAlignment="Left"
+                                            VerticalAlignment="Center" Margin="6,0"
+                                            Background="#44475A">
+                                        <TextBlock x:Name="txtPerfil" Text="{Binding Perfil}"
+                                                   FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="White" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Perfil}" Value="admin">
+                                            <Setter TargetName="badgePerfil" Property="Background" Value="#4A50C0"/>
+                                            <Setter TargetName="txtPerfil" Property="Text" Value="Admin"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Perfil}" Value="usuario">
+                                            <Setter TargetName="badgePerfil" Property="Background" Value="#2A5A3A"/>
+                                            <Setter TargetName="txtPerfil" Property="Text" Value="Usuário"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Ações -->
+                        <DataGridTemplateColumn Header="Ações" Width="195" CanUserResize="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="6,0" VerticalAlignment="Center">
+                                        <Button Tag="{Binding}"
+                                                Height="32" Padding="12,0" FontSize="12"
+                                                Background="#3A3A5A" Foreground="#C0C0E0"
                                                 BorderThickness="0" Cursor="Hand"
-                                                Margin="0,0,6,0"
+                                                Margin="0,0,8,0"
                                                 Click="BtnEditar_Click">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                                                        <StackPanel Orientation="Horizontal" Margin="{TemplateBinding Padding}" VerticalAlignment="Center">
+                                                            <TextBlock Text="✏" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Editar" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#6C6F85"/>
+                                                            <Setter TargetName="bd" Property="Background" Value="#5A5A8A"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
                                             </Button.Template>
                                         </Button>
-                                        <Button Content="Excluir"
-                                                Tag="{Binding}"
-                                                Height="26" Padding="10,0" FontSize="11"
-                                                Background="#FF5555" Foreground="White"
+                                        <Button Tag="{Binding}"
+                                                Height="32" Padding="12,0" FontSize="12"
+                                                Background="#5A1A1A" Foreground="#FF9090"
                                                 BorderThickness="0" Cursor="Hand"
                                                 Click="BtnExcluir_Click">
                                             <Button.Style>
@@ -1043,12 +1971,15 @@
                                             </Button.Style>
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                                                        <StackPanel Orientation="Horizontal" Margin="{TemplateBinding Padding}" VerticalAlignment="Center">
+                                                            <TextBlock Text="🗑" FontSize="12" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Excluir" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                        </StackPanel>
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#CC3333"/>
+                                                            <Setter TargetName="bd" Property="Background" Value="#882222"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -1061,6 +1992,54 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </Grid>
+
+            <!-- ══════════════ OVERLAY DE CARREGAMENTO ══════════════ -->
+            <Grid x:Name="overlayCarregando"
+                  Visibility="Collapsed"
+                  Panel.ZIndex="999"
+                  Background="#CC1E1E2E">
+                <Border Background="#252538"
+                        BorderBrush="#3A3A55" BorderThickness="1"
+                        CornerRadius="14" Padding="48,36"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel HorizontalAlignment="Center">
+
+                        <!-- Spinner: borda parcial girando -->
+                        <Border x:Name="spinnerBorder"
+                                Width="52" Height="52"
+                                BorderBrush="#7C83FF"
+                                BorderThickness="5,5,0,0"
+                                CornerRadius="26"
+                                HorizontalAlignment="Center"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <RotateTransform x:Name="spinnerRotate" Angle="0"/>
+                            </Border.RenderTransform>
+                            <Border.Triggers>
+                                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                    <BeginStoryboard x:Name="spinnerStoryboard">
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="spinnerRotate"
+                                                Storyboard.TargetProperty="Angle"
+                                                From="0" To="360"
+                                                Duration="0:0:0.75"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Border.Triggers>
+                        </Border>
+
+                        <TextBlock x:Name="overlayTxtMensagem"
+                                   Text="Carregando..."
+                                   Foreground="#E0E0E0"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,18,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
         </Grid>
     </Grid>
 </Window>

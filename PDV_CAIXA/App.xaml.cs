@@ -12,7 +12,8 @@ namespace PDV_CAIXA {
 
             DispatcherUnhandledException += (s, ex) => {
                 MessageBox.Show(
-                    "Erro inesperado:\n\n" + ex.Exception.Message,
+                    "Erro inesperado:\n\n" + ex.Exception.Message +
+                    "\n\nLocalização:\n" + ex.Exception.StackTrace,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
                 ex.Handled = true;
             };

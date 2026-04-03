@@ -9,28 +9,28 @@ namespace PDV_CAIXA.Repositories {
         public IEnumerable<Produto> ObterTodos() {
             using var conn = _conexao.CriarConexao();
             return conn.Query<Produto>(
-                "SELECT id, nome, descricao, codigo_barras, preco, estoque, ativo, foto FROM produtos ORDER BY nome");
+                "SELECT id, nome, descricao, codigo_barras, preco, desconto, estoque, ativo, foto FROM produtos ORDER BY nome");
         }
 
         public Produto? ObterPorId(Guid id) {
             using var conn = _conexao.CriarConexao();
             return conn.QueryFirstOrDefault<Produto>(
-                "SELECT id, nome, descricao, codigo_barras, preco, estoque, ativo, foto FROM produtos WHERE id = @Id",
+                "SELECT id, nome, descricao, codigo_barras, preco, desconto, estoque, ativo, foto FROM produtos WHERE id = @Id",
                 new { Id = id });
         }
 
         public Produto? ObterPorCodigoBarras(string codigo) {
             using var conn = _conexao.CriarConexao();
             return conn.QueryFirstOrDefault<Produto>(
-                "SELECT id, nome, descricao, codigo_barras, preco, estoque, ativo FROM produtos WHERE codigo_barras = @Codigo AND ativo = true",
+                "SELECT id, nome, descricao, codigo_barras, preco, desconto, estoque, ativo FROM produtos WHERE codigo_barras = @Codigo AND ativo = true",
                 new { Codigo = codigo });
         }
 
         public void Inserir(Produto produto) {
             using var conn = _conexao.CriarConexao();
             conn.Execute(
-                @"INSERT INTO produtos (nome, descricao, codigo_barras, preco, estoque, ativo, foto)
-                  VALUES (@Nome, @Descricao, @CodigoBarras, @Preco, @Estoque, @Ativo, @Foto)",
+                @"INSERT INTO produtos (nome, descricao, codigo_barras, preco, desconto, estoque, ativo, foto)
+                  VALUES (@Nome, @Descricao, @CodigoBarras, @Preco, @Desconto, @Estoque, @Ativo, @Foto)",
                 produto);
         }
 
@@ -39,9 +39,15 @@ namespace PDV_CAIXA.Repositories {
             conn.Execute(
                 @"UPDATE produtos
                   SET nome = @Nome, descricao = @Descricao, codigo_barras = @CodigoBarras,
-                      preco = @Preco, estoque = @Estoque, ativo = @Ativo, foto = @Foto
+                      preco = @Preco, desconto = @Desconto, estoque = @Estoque, ativo = @Ativo, foto = @Foto
                   WHERE id = @Id",
                 produto);
+        }
+
+        public bool TemPedidos(Guid id) {
+            using var conn = _conexao.CriarConexao();
+            return conn.ExecuteScalar<int>(
+                "SELECT COUNT(*) FROM pedido_itens WHERE produto_id = @Id", new { Id = id }) > 0;
         }
 
         public void Excluir(Guid id) {

@@ -15,6 +15,8 @@ namespace PDV_CAIXA.Services {
 
         public void Atualizar(Produto produto) => _repo.Atualizar(produto);
 
+        public bool TemPedidos(Guid id) => _repo.TemPedidos(id);
+
         public void Excluir(Guid id) => _repo.Excluir(id);
     }
 }

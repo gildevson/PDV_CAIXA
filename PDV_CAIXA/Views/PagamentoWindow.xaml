@@ -1,0 +1,234 @@
+<Window x:Class="PDV_CAIXA.Views.PagamentoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pagamento"
+        Height="640" Width="420"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#1E1E2E">
+
+    <Grid Margin="24,20,24,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Título -->
+            <RowDefinition Height="Auto"/>  <!-- Total -->
+            <RowDefinition Height="Auto"/>  <!-- Pago / Faltando -->
+            <RowDefinition Height="Auto"/>  <!-- Label lista -->
+            <RowDefinition Height="Auto"/>  <!-- Lista de pagamentos -->
+            <RowDefinition Height="Auto"/>  <!-- Separador -->
+            <RowDefinition Height="Auto"/>  <!-- Label adicionar -->
+            <RowDefinition Height="Auto"/>  <!-- Método buttons -->
+            <RowDefinition Height="Auto"/>  <!-- Input valor + Adicionar -->
+            <RowDefinition Height="Auto"/>  <!-- Troco -->
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>  <!-- Botões ação -->
+        </Grid.RowDefinitions>
+
+        <!-- Título -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,14">
+            <TextBlock Text="💰" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBlock Text="Pagamento" FontSize="18" FontWeight="Bold"
+                       Foreground="#E0E0E0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Total da compra -->
+        <Border Grid.Row="1" Background="#13131F" CornerRadius="8" Padding="16,10" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="Total da compra:" Foreground="#6C6F85" FontSize="13"
+                           VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock x:Name="txtTotalCompra" FontSize="24" FontWeight="Bold"
+                           Foreground="#50FA7B" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Pago / Faltando -->
+        <Border Grid.Row="2" Background="#13131F" CornerRadius="8" Padding="12,8" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                    <TextBlock Text="PAGO" Foreground="#6C6F85" FontSize="10" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="txtPago" Text="R$ 0,00" FontSize="18" FontWeight="Bold"
+                               Foreground="#50FA7B" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <Rectangle Grid.Column="1" Fill="#2A2A3E"/>
+
+                <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                    <TextBlock x:Name="lblFaltandoTroco" Text="FALTANDO" Foreground="#6C6F85"
+                               FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="txtFaltando" Text="—" FontSize="18" FontWeight="Bold"
+                               Foreground="#FF5555" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Label lista -->
+        <TextBlock Grid.Row="3" Text="PAGAMENTOS ADICIONADOS"
+                   Foreground="#44475A" FontSize="10" FontWeight="SemiBold"
+                   Margin="0,0,0,6"/>
+
+        <!-- Lista de pagamentos (dinâmica) -->
+        <ScrollViewer Grid.Row="4" MaxHeight="130" VerticalScrollBarVisibility="Auto" Margin="0,0,0,4">
+            <StackPanel x:Name="stackPagamentos"/>
+        </ScrollViewer>
+
+        <!-- Separador -->
+        <Rectangle Grid.Row="5" Height="1" Fill="#2A2A3E" Margin="0,8,0,12"/>
+
+        <!-- Label adicionar -->
+        <TextBlock Grid.Row="6" Text="ADICIONAR PAGAMENTO"
+                   Foreground="#44475A" FontSize="10" FontWeight="SemiBold"
+                   Margin="0,0,0,8"/>
+
+        <!-- Seletor de método (4 cards) -->
+        <UniformGrid Grid.Row="7" Columns="4" Margin="0,0,0,10" Height="54">
+            <!-- PIX -->
+            <Border x:Name="bdMetodoPix" Margin="0,0,3,0" Background="#1A1A2E"
+                    BorderBrush="#2A2A3E" BorderThickness="2" CornerRadius="8" Cursor="Hand"
+                    MouseLeftButtonDown="BdMetodo_Click" Tag="pix">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="📱" FontSize="14" HorizontalAlignment="Center"/>
+                    <TextBlock Text="PIX" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#A0A0C0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+            <!-- Dinheiro -->
+            <Border x:Name="bdMetodoDinheiro" Margin="2,0,2,0" Background="#1A1A2E"
+                    BorderBrush="#2A2A3E" BorderThickness="2" CornerRadius="8" Cursor="Hand"
+                    MouseLeftButtonDown="BdMetodo_Click" Tag="dinheiro">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="💵" FontSize="14" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Dinheiro" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#A0A0C0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+            <!-- Crédito -->
+            <Border x:Name="bdMetodoCredito" Margin="2,0,2,0" Background="#1A1A2E"
+                    BorderBrush="#2A2A3E" BorderThickness="2" CornerRadius="8" Cursor="Hand"
+                    MouseLeftButtonDown="BdMetodo_Click" Tag="credito">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="💳" FontSize="14" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Crédito" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#A0A0C0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+            <!-- Débito -->
+            <Border x:Name="bdMetodoDebito" Margin="3,0,0,0" Background="#1A1A2E"
+                    BorderBrush="#2A2A3E" BorderThickness="2" CornerRadius="8" Cursor="Hand"
+                    MouseLeftButtonDown="BdMetodo_Click" Tag="debito">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="💳" FontSize="14" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Débito" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#A0A0C0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- Input valor + botão Adicionar -->
+        <Grid Grid.Row="8" Margin="0,0,0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="120"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="#1A1A2E" BorderBrush="#3A3A5E"
+                    BorderThickness="2" CornerRadius="8">
+                <Grid>
+                    <TextBlock Text="R$" Foreground="#6C6F85" FontSize="14" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <TextBox x:Name="txtValorAdicionar"
+                             FontSize="18" FontWeight="Bold"
+                             Background="Transparent" Foreground="#E0E0E0"
+                             CaretBrush="#E0E0E0" BorderThickness="0"
+                             Padding="34,8,10,8"
+                             VerticalContentAlignment="Center"
+                             PreviewTextInput="TxtValor_PreviewTextInput"
+                             KeyDown="TxtValor_KeyDown"/>
+                </Grid>
+            </Border>
+
+            <Button Grid.Column="2" Content="+ Adicionar" Height="42"
+                    FontSize="12" FontWeight="Bold" Foreground="White"
+                    Cursor="Hand" Click="BtnAdicionar_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="#2A4A8A" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#3A5ABA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+
+        <!-- Troco (visível só quando dinheiro > faltando) -->
+        <Border Grid.Row="9" x:Name="bdTroco" Visibility="Collapsed"
+                Background="#0D1F0D" BorderBrush="#50FA7B" BorderThickness="1"
+                CornerRadius="8" Padding="12,8" Margin="0,4,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="💰 Troco: " Foreground="#6C6F85" FontSize="13" VerticalAlignment="Center"/>
+                <TextBlock x:Name="txtTroco" FontSize="16" FontWeight="Bold"
+                           Foreground="#50FA7B" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Botões ação -->
+        <Grid Grid.Row="11" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="Cancelar" Height="44"
+                    FontSize="13" FontWeight="SemiBold" Foreground="#6C6F85"
+                    Cursor="Hand" Click="BtnCancelar_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="Transparent" BorderBrush="#2A2A3E"
+                                BorderThickness="1" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#252538"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <Button x:Name="btnConfirmar" Grid.Column="2"
+                    Content="✓  Confirmar" Height="44"
+                    FontSize="13" FontWeight="Bold" Foreground="White"
+                    Cursor="Hand" IsEnabled="False"
+                    Click="BtnConfirmar_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="#1A6A30" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#228840"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Background" Value="#2A2A3E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

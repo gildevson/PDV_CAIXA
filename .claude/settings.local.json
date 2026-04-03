@@ -15,7 +15,10 @@
       "Bash(cmd /c \"wmic process where name='PDV_CAIXA.exe' delete\" 2>&1)",
       "Bash(cmd /c \"wmic process where name=''''PDV_CAIXA.exe'''' delete\")",
       "Bash(cmd /c \"taskkill /PID 24640 /F\")",
-      "Bash(timeout /t 2)"
+      "Bash(timeout /t 2)",
+      "Bash(\"C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\PDV_CAIXA\\\\Database\\\\Scripts\\\\add_numero_pedidos.sql\")",
+      "Bash(cmd.exe /c \"taskkill /F /IM PDV_CAIXA.exe\" 2>&1)",
+      "Bash(ls -la *.cs)"
     ]
   }
 }

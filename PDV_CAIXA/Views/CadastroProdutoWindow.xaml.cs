@@ -2,6 +2,7 @@ using Microsoft.Win32;
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PDV_CAIXA.Models;
@@ -29,9 +30,11 @@ namespace PDV_CAIXA.Views {
             txtNome.Text          = produto.Nome;
             txtCodigoBarras.Text  = produto.CodigoBarras ?? string.Empty;
             txtPreco.Text         = produto.Preco.ToString("N2", new CultureInfo("pt-BR"));
+            txtDesconto.Text      = produto.Desconto.ToString("F0", CultureInfo.InvariantCulture);
             txtEstoque.Text       = produto.Estoque.ToString();
             txtDescricao.Text     = produto.Descricao ?? string.Empty;
             SelecionarSituacao(produto.Ativo);
+            AtualizarPreviewDesconto();
 
             if (produto.Foto is { Length: > 0 }) {
                 _fotoBytes = produto.Foto;
@@ -92,6 +95,29 @@ namespace PDV_CAIXA.Views {
             return saida.ToArray();
         }
 
+        // ── Desconto preview ────────────────────────────────────────────
+
+        private void TxtDesconto_TextChanged(object sender, TextChangedEventArgs e)
+            => AtualizarPreviewDesconto();
+
+        private void AtualizarPreviewDesconto() {
+            if (txtDesconto == null || txtPreco == null ||
+                borderPreviewDesconto == null || txtPreviewDesconto == null) return;
+
+            decimal.TryParse(txtPreco.Text.Replace(",", "."),
+                NumberStyles.Any, CultureInfo.InvariantCulture, out var preco);
+            decimal.TryParse(txtDesconto.Text.Replace(",", "."),
+                NumberStyles.Any, CultureInfo.InvariantCulture, out var desc);
+
+            if (desc > 0 && desc <= 100 && preco > 0) {
+                var precoFinal = preco * (1 - desc / 100m);
+                txtPreviewDesconto.Text          = $"Preço com desconto: {precoFinal.ToString("C2", new CultureInfo("pt-BR"))}  (era {preco.ToString("C2", new CultureInfo("pt-BR"))})";
+                borderPreviewDesconto.Visibility = Visibility.Visible;
+            } else {
+                borderPreviewDesconto.Visibility = Visibility.Collapsed;
+            }
+        }
+
         // ── Situação ────────────────────────────────────────────────────
 
         private void SelecionarSituacao(bool ativo) {
@@ -136,6 +162,14 @@ namespace PDV_CAIXA.Views {
                 valido = false;
             }
 
+            if (!decimal.TryParse(txtDesconto.Text.Replace(",", "."),
+                    NumberStyles.Any, CultureInfo.InvariantCulture, out decimal desconto)
+                    || desconto < 0 || desconto > 100) {
+                txtErroDesconto.Text       = "Desconto deve ser 0 a 100.";
+                txtErroDesconto.Visibility = Visibility.Visible;
+                valido = false;
+            }
+
             if (!int.TryParse(txtEstoque.Text, out int estoque) || estoque < 0) {
                 txtErroEstoque.Text       = "Estoque inválido.";
                 txtErroEstoque.Visibility = Visibility.Visible;
@@ -152,6 +186,7 @@ namespace PDV_CAIXA.Views {
                     Nome         = nome,
                     CodigoBarras = string.IsNullOrWhiteSpace(txtCodigoBarras.Text) ? null : txtCodigoBarras.Text.Trim(),
                     Preco        = preco,
+                    Desconto     = desconto,
                     Estoque      = estoque,
                     Descricao    = string.IsNullOrWhiteSpace(txtDescricao.Text) ? null : txtDescricao.Text.Trim(),
                     Ativo        = _ativo,
@@ -178,10 +213,11 @@ namespace PDV_CAIXA.Views {
         }
 
         private void LimparErros() {
-            txtErroNome.Visibility    = Visibility.Collapsed;
-            txtErroPreco.Visibility   = Visibility.Collapsed;
-            txtErroEstoque.Visibility = Visibility.Collapsed;
-            txtErroGeral.Visibility   = Visibility.Collapsed;
+            txtErroNome.Visibility     = Visibility.Collapsed;
+            txtErroPreco.Visibility    = Visibility.Collapsed;
+            txtErroDesconto.Visibility = Visibility.Collapsed;
+            txtErroEstoque.Visibility  = Visibility.Collapsed;
+            txtErroGeral.Visibility    = Visibility.Collapsed;
         }
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject {

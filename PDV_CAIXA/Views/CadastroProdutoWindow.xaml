@@ -187,16 +187,19 @@
                 <TextBlock Text="CÓDIGO DE BARRAS" Style="{StaticResource FieldLabel}"/>
                 <TextBox x:Name="txtCodigoBarras" Margin="0,0,0,16"/>
 
-                <!-- Preço e Estoque lado a lado -->
+                <!-- Preço, Estoque e Desconto -->
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="0.75*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="PREÇO (R$)" Style="{StaticResource FieldLabel}"/>
-                        <TextBox x:Name="txtPreco" Text="0,00"/>
+                        <TextBox x:Name="txtPreco" Text="0,00"
+                                 TextChanged="TxtDesconto_TextChanged"/>
                         <TextBlock x:Name="txtErroPreco" Foreground="#FF6B6B" FontSize="11"
                                    Margin="0,2,0,0" Visibility="Collapsed"/>
                     </StackPanel>
@@ -206,7 +209,27 @@
                         <TextBlock x:Name="txtErroEstoque" Foreground="#FF6B6B" FontSize="11"
                                    Margin="0,2,0,0" Visibility="Collapsed"/>
                     </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="DESCONTO (%)" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="txtDesconto" Text="0"
+                                 TextChanged="TxtDesconto_TextChanged"/>
+                        <TextBlock x:Name="txtErroDesconto" Foreground="#FF6B6B" FontSize="11"
+                                   Margin="0,2,0,0" Visibility="Collapsed"/>
+                    </StackPanel>
                 </Grid>
+
+                <!-- Preview do preço com desconto -->
+                <Border x:Name="borderPreviewDesconto"
+                        Background="#1A2A1A" BorderBrush="#2A5A2A" BorderThickness="1"
+                        CornerRadius="6" Padding="12,8" Margin="0,-8,0,16"
+                        Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🏷" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock x:Name="txtPreviewDesconto"
+                                   Foreground="#50FA7B" FontSize="12" FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- Descrição -->
                 <TextBlock Text="DESCRIÇÃO" Style="{StaticResource FieldLabel}"/>
