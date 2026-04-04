@@ -14,10 +14,7 @@ CREATE TABLE usuarios (
     foto   BYTEA        NULL
 );
 
--- ── 2. ADICIONAR COLUNA FOTO (tabela já existente) ───────────
-ALTER TABLE usuarios ADD COLUMN foto BYTEA NULL;
-
--- ── 3. INSERT DE EXEMPLO ─────────────────────────────────────
+-- ── 2. INSERT DE EXEMPLO ─────────────────────────────────────
 -- ATENÇÃO: a senha deve ser gerada pela aplicação (BCrypt).
 -- Use a tela de cadastro para criar usuários com hash correto.
 --

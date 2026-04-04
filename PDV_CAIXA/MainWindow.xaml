@@ -239,6 +239,11 @@
                             Visibility="Collapsed"
                             Click="BtnMenuUsuarios_Click"/>
 
+                    <Button x:Name="btnMenuCaixa"
+                            Content="🏦  Caixa"
+                            Style="{StaticResource MenuButton}"
+                            Click="BtnMenuCaixa_Click"/>
+
 </StackPanel>
 
             </DockPanel>
@@ -428,106 +433,182 @@
                             <ListBox.ItemContainerStyle>
                                 <Style TargetType="ListBoxItem">
                                     <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/>
                                     <Setter Property="Background" Value="Transparent"/>
                                     <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Style>
                             </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#2A2A3E" BorderThickness="0,0,0,1"
-                                            Padding="14,10" Cursor="Hand">
+                                    <Border Margin="8,3" CornerRadius="10" Cursor="Hand"
+                                            ClipToBounds="True" BorderThickness="1">
                                         <Border.Style>
                                             <Style TargetType="Border">
-                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Background" Value="#1A1A2E"/>
+                                                <Setter Property="BorderBrush" Value="#252540"/>
                                                 <Setter Property="Opacity" Value="1"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                                        <Setter Property="Background" Value="#252538"/>
+                                                        <Setter Property="Background" Value="#22224A"/>
+                                                        <Setter Property="BorderBrush" Value="#7C83FF"/>
                                                     </DataTrigger>
-                                                    <!-- Escurece produtos sem estoque -->
                                                     <DataTrigger Binding="{Binding Estoque}" Value="0">
-                                                        <Setter Property="Opacity" Value="0.45"/>
+                                                        <Setter Property="Opacity" Value="0.4"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
                                         <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="44"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" Width="36" Height="36"
-                                                    CornerRadius="6" ClipToBounds="True">
-                                                <Grid>
-                                                    <Border Background="#252538">
-                                                        <TextBlock Text="{Binding Iniciais}"
-                                                                   FontSize="11" FontWeight="Bold"
-                                                                   Foreground="#7C83FF"
-                                                                   HorizontalAlignment="Center"
-                                                                   VerticalAlignment="Center"/>
-                                                    </Border>
-                                                    <Image Stretch="UniformToFill"
-                                                           Source="{Binding Foto, Converter={StaticResource BytesToImage}}"/>
-                                                </Grid>
+                                            <!-- Barra de seleção esquerda -->
+                                            <Border Width="4" HorizontalAlignment="Left" CornerRadius="2,0,0,2">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                                <Setter Property="Background" Value="#7C83FF"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
                                             </Border>
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="10,0">
-                                                <TextBlock Text="{Binding Nome}"
-                                                           Foreground="#E0E0E0" FontSize="13"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                                    <!-- Código de barras -->
-                                                    <Border Background="#1A1A2E" CornerRadius="3"
-                                                            Padding="5,1" Margin="0,0,6,0">
-                                                        <TextBlock FontFamily="Consolas" FontSize="10"
-                                                                   Foreground="#7C83FF">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Text" Value="sem cód."/>
-                                                                    <Setter Property="Foreground" Value="#3A3A55"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding CodigoBarras}" Value="{x:Null}">
-                                                                            <Setter Property="Text" Value="sem cód."/>
-                                                                            <Setter Property="Foreground" Value="#3A3A55"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                            <Run Text="{Binding CodigoBarras, Mode=OneWay, TargetNullValue='sem cód.'}"/>
-                                                        </TextBlock>
-                                                    </Border>
-                                                    <!-- Estoque -->
-                                                    <TextBlock Foreground="#6C6F85" FontSize="10" VerticalAlignment="Center">
-                                                        <Run Text="Estoque: "/>
-                                                        <Run Text="{Binding EstoqueTexto, Mode=OneWay}"/>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                            </StackPanel>
-                                            <!-- Preço ou badge sem estoque -->
-                                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                                <TextBlock Text="{Binding PrecoTexto}"
-                                                           Foreground="#7C83FF" FontSize="14"
-                                                           FontWeight="Bold" HorizontalAlignment="Right"/>
-                                                <!-- Badge "SEM ESTOQUE" visível só quando Estoque = 0 -->
-                                                <Border CornerRadius="4" Background="#3A1010"
-                                                        BorderBrush="#662222" BorderThickness="1"
-                                                        Padding="5,2" Margin="0,3,0,0"
-                                                        HorizontalAlignment="Right">
+                                            <!-- Conteúdo do card -->
+                                            <Grid Margin="14,10,12,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="46"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <!-- Avatar -->
+                                                <Border Grid.Column="0" Width="42" Height="42"
+                                                        CornerRadius="9" ClipToBounds="True" BorderThickness="1.5">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Setter Property="BorderBrush" Value="#2A2A4A"/>
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Estoque}" Value="0">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                                    <Setter Property="BorderBrush" Value="#5558AA"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
                                                     </Border.Style>
-                                                    <TextBlock Text="SEM ESTOQUE" FontSize="9"
-                                                               FontWeight="Bold" Foreground="#FF5555"/>
+                                                    <Grid>
+                                                        <Border>
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#252545"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                                            <Setter Property="Background" Value="#2E2E70"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="{Binding Iniciais}"
+                                                                       FontSize="14" FontWeight="Bold"
+                                                                       Foreground="#7C83FF"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <Image Stretch="UniformToFill"
+                                                               Source="{Binding Foto, Converter={StaticResource BytesToImage}}"/>
+                                                    </Grid>
                                                 </Border>
-                                            </StackPanel>
+                                                <!-- Nome + Info -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
+                                                    <TextBlock Text="{Binding Nome}"
+                                                               FontSize="13" FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#D0D0E8"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                        <!-- Código de barras -->
+                                                        <Border CornerRadius="4" Padding="5,2" Margin="0,0,6,0" Background="#13132A">
+                                                            <TextBlock FontFamily="Consolas" FontSize="10"
+                                                                       Text="{Binding CodigoBarras, Mode=OneWay, TargetNullValue='sem cód.'}"
+                                                                       Foreground="#5558AA"/>
+                                                        </Border>
+                                                        <!-- Estoque -->
+                                                        <Border CornerRadius="4" Padding="5,2">
+                                                            <Border.Style>
+                                                                <Style TargetType="Border">
+                                                                    <Setter Property="Background" Value="#0D1A0D"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Estoque}" Value="0">
+                                                                            <Setter Property="Background" Value="#1A0D0D"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock FontSize="10">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="#4A8A4A"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Estoque}" Value="0">
+                                                                                <Setter Property="Foreground" Value="#8A4A4A"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                                <Run Text="▪ "/><Run Text="{Binding EstoqueTexto, Mode=OneWay}"/><Run Text=" un"/>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <!-- Preço + Badge -->
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding PrecoTexto}"
+                                                               FontSize="15" FontWeight="Bold"
+                                                               HorizontalAlignment="Right">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#7C83FF"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#A0A8FF"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <!-- Badge SEM ESTOQUE -->
+                                                    <Border CornerRadius="4" Background="#2A0A0A"
+                                                            BorderBrush="#551818" BorderThickness="1"
+                                                            Padding="5,2" Margin="0,4,0,0"
+                                                            HorizontalAlignment="Right">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Estoque}" Value="0">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="SEM ESTOQUE" FontSize="9"
+                                                                   FontWeight="Bold" Foreground="#CC4444"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -544,29 +625,33 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Cabeçalho carrinho + atalhos -->
-                    <Border Grid.Row="0" Background="#1A1A2E" Padding="16,10">
+                    <!-- Cabeçalho carrinho -->
+                    <Border Grid.Row="0" Padding="16,11"
+                            BorderBrush="#2A2A3E" BorderThickness="0,0,0,1">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#16162A" Offset="0"/>
+                                <GradientStop Color="#1A1A2E" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
                         <Grid>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="🛒  CARRINHO"
-                                           Foreground="#7C83FF" FontSize="13" FontWeight="Bold"/>
-                            </StackPanel>
-                            <!-- Atalhos rápidos -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Border Style="{StaticResource KeyBadge}" Margin="0,0,4,0">
-                                    <TextBlock Text="Del" Style="{StaticResource KeyText}"/>
+                                <TextBlock Text="🛒" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="CARRINHO"
+                                           Foreground="#7C83FF" FontSize="12" FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+                                <!-- Contador de itens -->
+                                <Border x:Name="pdvBadgeItens" Background="#252545" CornerRadius="10"
+                                        Padding="8,2" Margin="10,0,0,0" Visibility="Collapsed">
+                                    <TextBlock x:Name="pdvTxtBadgeItens" Foreground="#9BA2FF"
+                                               FontSize="11" FontWeight="SemiBold"/>
                                 </Border>
-                                <TextBlock Text="Limpar  " Foreground="#44475A" FontSize="10" VerticalAlignment="Center"/>
-                                <Border Style="{StaticResource KeyBadge}" Margin="0,0,4,0">
-                                    <TextBlock Text="F12" Style="{StaticResource KeyText}"/>
-                                </Border>
-                                <TextBlock Text="Finalizar" Foreground="#44475A" FontSize="10" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                 <Border Style="{StaticResource KeyBadge}" Margin="0,0,6,0">
                                     <TextBlock Text="Del" Style="{StaticResource KeyText}"/>
                                 </Border>
-                                <Button Content="Limpar tudo"
+                                <Button Content="Limpar"
                                         Height="28" Padding="12,0" FontSize="11"
                                         Foreground="#A0A0C0"
                                         Template="{StaticResource PdvBtnSecundario}"
@@ -690,31 +775,99 @@
 
                     <!-- Estado vazio -->
                     <StackPanel Grid.Row="1" x:Name="pdvPanelVazio"
-                                VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="🛒" FontSize="52"
-                                   HorizontalAlignment="Center" Opacity="0.15"/>
-                        <TextBlock Text="Nenhum item no carrinho"
-                                   Foreground="#44475A" FontSize="14"
-                                   HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                        <TextBlock Text="Busque um produto à esquerda e clique em Adicionar"
-                                   Foreground="#3A3A55" FontSize="11"
-                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                VerticalAlignment="Center" HorizontalAlignment="Center"
+                                Margin="40,0">
+                        <!-- Ícone com glow -->
+                        <Border Width="100" Height="100" CornerRadius="50"
+                                HorizontalAlignment="Center" Margin="0,0,0,24">
+                            <Border.Background>
+                                <RadialGradientBrush>
+                                    <GradientStop Color="#1E1E40" Offset="0"/>
+                                    <GradientStop Color="#13131F" Offset="1"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#7C83FF" BlurRadius="30"
+                                                  ShadowDepth="0" Opacity="0.12"/>
+                            </Border.Effect>
+                            <TextBlock Text="🛒" FontSize="44"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <!-- Título -->
+                        <TextBlock Text="Carrinho vazio"
+                                   Foreground="#4A4A6A" FontSize="20" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"/>
+                        <!-- Subtítulo -->
+                        <TextBlock Text="Adicione produtos para iniciar a venda"
+                                   Foreground="#33334A" FontSize="12"
+                                   HorizontalAlignment="Center" Margin="0,8,0,28"
+                                   TextAlignment="Center"/>
+                        <!-- Dica -->
+                        <Border Background="#13131F" CornerRadius="10" Padding="16,10"
+                                BorderBrush="#2A2A3E" BorderThickness="1"
+                                HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Use " Foreground="#44475A" FontSize="11" VerticalAlignment="Center"/>
+                                <Border Background="#1E1E3E" CornerRadius="5" Padding="7,3" Margin="0,0,4,0">
+                                    <TextBlock Text="F2" FontSize="11" Foreground="#7C83FF"
+                                               FontWeight="Bold" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text=" para focar na busca" Foreground="#44475A"
+                                           FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <!-- Rodapé: total + botões -->
-                    <Border Grid.Row="2" Background="#13131F" Padding="20,14">
+                    <Border Grid.Row="2" Padding="20,16">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#111120" Offset="0"/>
+                                <GradientStop Color="#0D0D1A" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect Color="#000000" BlurRadius="20"
+                                              ShadowDepth="0" Opacity="0.5" Direction="90"/>
+                        </Border.Effect>
                         <StackPanel>
-                            <Grid Margin="0,0,0,12">
-                                <TextBlock x:Name="pdvTxtTotalItens" Text="0 itens"
-                                           Foreground="#6C6F85" FontSize="12" VerticalAlignment="Center"/>
-                                <StackPanel HorizontalAlignment="Right">
-                                    <TextBlock Text="TOTAL" Foreground="#8888AA"
-                                               FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                                    <TextBlock x:Name="pdvTxtTotal" Text="R$ 0,00"
-                                               Foreground="#7C83FF" FontSize="26"
-                                               FontWeight="Bold" HorizontalAlignment="Right"/>
-                                </StackPanel>
-                            </Grid>
+                            <!-- Total -->
+                            <Border Background="#13131F" CornerRadius="12"
+                                    Padding="16,12" Margin="0,0,0,14"
+                                    BorderBrush="#2A2A4A" BorderThickness="1">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#7C83FF" BlurRadius="20"
+                                                      ShadowDepth="0" Opacity="0.08"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock x:Name="pdvTxtTotalItens" Text="0 itens"
+                                                   Foreground="#5A5A7A" FontSize="11"/>
+                                        <TextBlock Text="Total da venda"
+                                                   Foreground="#44445A" FontSize="10" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Right">
+                                        <TextBlock Text="TOTAL" Foreground="#6C6F85"
+                                                   FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                        <TextBlock x:Name="pdvTxtTotal" Text="R$ 0,00"
+                                                   FontSize="28" FontWeight="Bold"
+                                                   HorizontalAlignment="Right">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#7C83FF"/>
+                                                    <Setter Property="Effect">
+                                                        <Setter.Value>
+                                                            <DropShadowEffect Color="#7C83FF" BlurRadius="14"
+                                                                              ShadowDepth="0" Opacity="0.5"/>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -1991,6 +2144,800 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+            </Grid>
+
+            <!-- ══════════════ PÁGINA: CAIXA ══════════════ -->
+            <Grid x:Name="pageCaixa" Visibility="Collapsed">
+
+                <!-- ── Estado: Caixa Fechado ── -->
+                <StackPanel x:Name="caixaPanelFechado"
+                            VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <!-- Círculo decorativo externo -->
+                    <Border Width="140" Height="140" CornerRadius="70"
+                            HorizontalAlignment="Center" Margin="0,0,0,8" Opacity="0.3">
+                        <Border.Background>
+                            <RadialGradientBrush>
+                                <GradientStop Color="#3A1010" Offset="0"/>
+                                <GradientStop Color="Transparent" Offset="1"/>
+                            </RadialGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <!-- Ícone principal -->
+                    <Border Width="100" Height="100" CornerRadius="50"
+                            HorizontalAlignment="Center" Margin="0,-120,0,28">
+                        <Border.Background>
+                            <RadialGradientBrush>
+                                <GradientStop Color="#2A1010" Offset="0"/>
+                                <GradientStop Color="#13131F" Offset="1"/>
+                            </RadialGradientBrush>
+                        </Border.Background>
+                        <Border.Effect>
+                            <DropShadowEffect Color="#FF5555" BlurRadius="40" ShadowDepth="0" Opacity="0.20"/>
+                        </Border.Effect>
+                        <TextBlock Text="🔒" FontSize="44"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Caixa Fechado"
+                               Foreground="#6A6A8A" FontSize="24" FontWeight="Bold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Inicie uma sessão para registrar movimentações"
+                               Foreground="#3A3A55" FontSize="12"
+                               HorizontalAlignment="Center" Margin="0,8,0,32"
+                               TextAlignment="Center"/>
+                    <Button Content="📋  Ver histórico de caixas" Height="34" Width="220"
+                            FontSize="11" Foreground="#44446A"
+                            Cursor="Hand" HorizontalAlignment="Center"
+                            Margin="0,0,0,12" Click="BtnHistoricoCaixa_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="Transparent" CornerRadius="8"
+                                        BorderBrush="#1E1E38" BorderThickness="1">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="BorderBrush" Value="#3A3A5A"/>
+                                        <Setter TargetName="bd" Property="Background" Value="#10101E"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button Content="🏦   Abrir Caixa" Height="52" Width="220"
+                            FontSize="15" FontWeight="Bold" Foreground="White"
+                            Cursor="Hand" HorizontalAlignment="Center"
+                            Click="BtnAbrirCaixa_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" CornerRadius="12">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#1A7A35" Offset="0"/>
+                                            <GradientStop Color="#128A40" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#50FA7B" BlurRadius="20" ShadowDepth="0" Opacity="0.35"/>
+                                    </Border.Effect>
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+
+                <!-- ── Estado: Caixa Aberto ── -->
+                <Grid x:Name="caixaPanelAberto" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ══ BANNER HEADER ══ -->
+                    <Border Grid.Row="0" ClipToBounds="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#071A09" Offset="0"/>
+                                <GradientStop Color="#0A120A" Offset="0.5"/>
+                                <GradientStop Color="#0F0F1A" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid Margin="24,18,24,18">
+                            <!-- Ícone decorativo de fundo -->
+                            <TextBlock Text="🏦" FontSize="120" Opacity="0.04"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Margin="0,0,-10,0" IsHitTestVisible="False"/>
+                            <!-- Conteúdo esquerdo -->
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <Border Background="#0D2A12" BorderBrush="#1A5A22"
+                                            BorderThickness="1" CornerRadius="20" Padding="10,3">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="7" Height="7" Fill="#50FA7B"
+                                                     VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="CAIXA ABERTO" Foreground="#50FA7B"
+                                                       FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock x:Name="caixaTxtAbertura"
+                                           Foreground="#3A4A3A" FontSize="11"/>
+                            </StackPanel>
+                            <!-- Botões direita -->
+                            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                            <!-- Botão histórico -->
+                            <Button Height="36" Padding="14,0" Cursor="Hand" Margin="0,0,8,0"
+                                    Click="BtnHistoricoCaixa_Click">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bd" CornerRadius="9"
+                                                BorderBrush="#1E1E3A" BorderThickness="1"
+                                                Background="Transparent">
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                        Margin="4,0">
+                                                <TextBlock Text="📋" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Histórico" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="#6C6F85" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="#14142A"/>
+                                                <Setter TargetName="bd" Property="BorderBrush" Value="#2A2A4A"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            <!-- Botão fechar -->
+                            <Button Height="38" Padding="18,0" Cursor="Hand"
+                                    Click="BtnFecharCaixa_Click">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bd" CornerRadius="9"
+                                                BorderBrush="#5A2020" BorderThickness="1">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                    <GradientStop Color="#3A1212" Offset="0"/>
+                                                    <GradientStop Color="#2A0D0D" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                        Margin="4,0">
+                                                <TextBlock Text="🔒" FontSize="13" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                                <TextBlock Text="Fechar Caixa" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="#FF6B6B" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="BorderBrush" Value="#882222"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- ══ CARDS DE RESUMO ══ -->
+                    <Grid Grid.Row="1" Margin="16,14,16,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.3*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ── SALDO ATUAL (card maior, destaque) ── -->
+                        <Border Grid.Column="0" CornerRadius="14" ClipToBounds="True"
+                                BorderBrush="#1E4A22" BorderThickness="1">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#0A1E0C" Offset="0"/>
+                                    <GradientStop Color="#0E2410" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border.Effect>
+                                <DropShadowEffect Color="#50FA7B" BlurRadius="30" ShadowDepth="0" Opacity="0.10"/>
+                            </Border.Effect>
+                            <Grid Margin="20,16,20,16">
+                                <!-- Ícone decorativo fundo -->
+                                <TextBlock Text="💰" FontSize="72" Opacity="0.07"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           Margin="0,0,-8,0" IsHitTestVisible="False"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="SALDO EM CAIXA" Foreground="#2A6A30"
+                                               FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock x:Name="caixaTxtSaldo" Text="R$ 0,00"
+                                               FontSize="32" FontWeight="Bold" Margin="0,8,0,4">
+                                        <TextBlock.Foreground>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                <GradientStop Color="#50FA7B" Offset="0"/>
+                                                <GradientStop Color="#88FFAA" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </TextBlock.Foreground>
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#50FA7B" BlurRadius="14" ShadowDepth="0" Opacity="0.45"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                    <TextBlock Text="disponível no caixa" Foreground="#244A26"
+                                               FontSize="11"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- ── ENTRADAS ── -->
+                        <Border Grid.Column="2" CornerRadius="14" ClipToBounds="True"
+                                BorderBrush="#1A3A1A" BorderThickness="1">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#0A180A" Offset="0"/>
+                                    <GradientStop Color="#0D1E0D" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Grid Margin="16,14,16,14">
+                                <TextBlock Text="⬆" FontSize="56" Opacity="0.06"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           IsHitTestVisible="False"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="ENTRADAS" Foreground="#2A4A2A"
+                                               FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock x:Name="caixaTxtEntradas" Text="R$ 0,00"
+                                               Foreground="#48B848" FontSize="22" FontWeight="Bold"
+                                               Margin="0,7,0,3"/>
+                                    <TextBlock Text="recebido" Foreground="#1E381E"
+                                               FontSize="10"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- ── SAÍDAS ── -->
+                        <Border Grid.Column="4" CornerRadius="14" ClipToBounds="True"
+                                BorderBrush="#3A1A1A" BorderThickness="1">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#1A0A0A" Offset="0"/>
+                                    <GradientStop Color="#200E0E" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Grid Margin="16,14,16,14">
+                                <TextBlock Text="⬇" FontSize="56" Opacity="0.06"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           IsHitTestVisible="False"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="SAÍDAS" Foreground="#4A2A2A"
+                                               FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock x:Name="caixaTxtSaidas" Text="R$ 0,00"
+                                               Foreground="#CC4444" FontSize="22" FontWeight="Bold"
+                                               Margin="0,7,0,3"/>
+                                    <TextBlock Text="gasto" Foreground="#3A1A1A"
+                                               FontSize="10"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- ══ BARRA DE AÇÕES ══ -->
+                    <Grid Grid.Row="2" Margin="16,12,16,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Nova Entrada -->
+                        <Button Grid.Column="0" Height="42" Padding="20,0"
+                                Cursor="Hand" Click="BtnNovaEntrada_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" CornerRadius="10" BorderThickness="1"
+                                            BorderBrush="#2A7A2A">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#1A6A25" Offset="0"/>
+                                                <GradientStop Color="#155520" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Border Background="#1E8A2E" CornerRadius="5"
+                                                    Width="22" Height="22" Margin="0,0,9,0">
+                                                <TextBlock Text="＋" FontSize="14" FontWeight="Bold"
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="Nova Entrada" FontSize="12"
+                                                       FontWeight="SemiBold" Foreground="White"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- Nova Saída -->
+                        <Button Grid.Column="2" Height="42" Padding="20,0"
+                                Cursor="Hand" Click="BtnNovaSaida_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" CornerRadius="10" BorderThickness="1"
+                                            BorderBrush="#7A2A2A">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#6A1A1A" Offset="0"/>
+                                                <GradientStop Color="#551515" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Border Background="#882222" CornerRadius="5"
+                                                    Width="22" Height="22" Margin="0,0,9,0">
+                                                <TextBlock Text="－" FontSize="14" FontWeight="Bold"
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="Nova Saída" FontSize="12"
+                                                       FontWeight="SemiBold" Foreground="White"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                        <!-- Label movimentações -->
+                        <TextBlock Grid.Column="4" Text="MOVIMENTAÇÕES DO DIA"
+                                   Foreground="#2A2A3E" FontSize="10" FontWeight="SemiBold"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- ══ LISTA DE MOVIMENTAÇÕES ══ -->
+                    <Grid Grid.Row="3" Margin="0,10,0,0">
+
+                        <!-- DataGrid -->
+                        <DataGrid x:Name="caixaDgMovimentacoes"
+                                  AutoGenerateColumns="False"
+                                  Background="#1E1E2E" RowBackground="#1E1E2E"
+                                  AlternatingRowBackground="#1A1A28"
+                                  Foreground="#E0E0E0" BorderThickness="0"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#22223A"
+                                  CanUserAddRows="False" IsReadOnly="True"
+                                  SelectionMode="Single" HeadersVisibility="Column"
+                                  RowHeight="50">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#111120"/>
+                                    <Setter Property="Foreground" Value="#44475A"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="FontSize" Value="10"/>
+                                    <Setter Property="Padding" Value="14,10"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#2A2A3E"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#222235"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#252545"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <!-- Data/Hora -->
+                                <DataGridTextColumn Header="DATA / HORA" Binding="{Binding DataTexto}" Width="120">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="14,0"/>
+                                            <Setter Property="Foreground" Value="#5A5A7A"/>
+                                            <Setter Property="FontFamily" Value="Consolas"/>
+                                            <Setter Property="FontSize" Value="12"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <!-- Tipo badge -->
+                                <DataGridTemplateColumn Header="TIPO" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="8" Padding="12,5" Margin="10,0"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                    BorderThickness="1">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#0A1A0A"/>
+                                                        <Setter Property="BorderBrush" Value="#1A4A1A"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Tipo}" Value="saida">
+                                                                <Setter Property="Background" Value="#1A0A0A"/>
+                                                                <Setter Property="BorderBrush" Value="#4A1A1A"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock VerticalAlignment="Center" FontSize="11"
+                                                               Margin="0,0,6,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="⬆"/>
+                                                                <Setter Property="Foreground" Value="#50FA7B"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Tipo}" Value="saida">
+                                                                        <Setter Property="Text" Value="⬇"/>
+                                                                        <Setter Property="Foreground" Value="#FF5555"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding TipoTexto}"
+                                                               FontSize="11" FontWeight="Bold"
+                                                               VerticalAlignment="Center">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#50FA7B"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Tipo}" Value="saida">
+                                                                        <Setter Property="Foreground" Value="#FF5555"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <!-- Descrição -->
+                                <DataGridTextColumn Header="DESCRIÇÃO" Binding="{Binding Descricao}" Width="*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="8,0"/>
+                                            <Setter Property="Foreground" Value="#C0C0D8"/>
+                                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <!-- Origem -->
+                                <DataGridTemplateColumn Header="ORIGEM" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="6" Padding="9,3" Margin="10,0"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#1A1A35"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Origem}" Value="venda">
+                                                                <Setter Property="Background" Value="#1A1A35"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock VerticalAlignment="Center" FontSize="11"
+                                                               Margin="0,0,5,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="✏"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Origem}" Value="venda">
+                                                                        <Setter Property="Text" Value="🛒"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding OrigemTexto}"
+                                                               FontSize="10" FontWeight="SemiBold"
+                                                               Foreground="#7C83FF"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <!-- Valor -->
+                                <DataGridTemplateColumn Header="VALOR" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ValorTexto}"
+                                                       FontSize="15" FontWeight="Bold"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,20,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#50FA7B"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Tipo}" Value="saida">
+                                                                <Setter Property="Foreground" Value="#FF6B6B"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Estado vazio da lista -->
+                        <StackPanel x:Name="caixaEmptyState"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    Margin="0,60,0,0" Visibility="Visible">
+                            <TextBlock Text="📋" FontSize="40"
+                                       HorizontalAlignment="Center" Opacity="0.2"/>
+                            <TextBlock Text="Nenhuma movimentação hoje"
+                                       Foreground="#2A2A3E" FontSize="14" FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                            <TextBlock Text="Use os botões acima para registrar entradas e saídas"
+                                       Foreground="#22223A" FontSize="11"
+                                       HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+
+                <!-- ── Estado: Histórico de Caixas ── -->
+                <Grid x:Name="caixaPanelHistorico" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header do histórico -->
+                    <Border Grid.Row="0" Padding="20,16">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#080812" Offset="0"/>
+                                <GradientStop Color="#0E0E1C" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Botão voltar -->
+                                <Button Cursor="Hand" Margin="0,0,18,0"
+                                        Click="BtnVoltarCaixa_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="Transparent" CornerRadius="9"
+                                                    Padding="12,7" BorderBrush="#1E1E38" BorderThickness="1">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="←" Foreground="#6C6F85" FontSize="13"
+                                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="Voltar" Foreground="#6C6F85" FontSize="12"
+                                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#12121E"/>
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="#2A2A4A"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <!-- Título -->
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="HISTÓRICO DE CAIXAS" Foreground="#44446A"
+                                               FontSize="10" FontWeight="Bold" Margin="0,0,0,3"/>
+                                    <TextBlock Text="Sessões de abertura e fechamento" Foreground="#D0D0E0"
+                                               FontSize="18" FontWeight="Bold"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <!-- Contador de sessões -->
+                            <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Background="#12121E" CornerRadius="10" Padding="14,8">
+                                <StackPanel>
+                                    <TextBlock x:Name="caixaHistoricoTxtTotal" Text="0 sessões"
+                                               Foreground="#6C6F85" FontSize="11" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Rectangle Grid.Row="0" Height="1" VerticalAlignment="Bottom" Fill="#14142A"/>
+
+                    <!-- DataGrid de sessões -->
+                    <DataGrid Grid.Row="1" x:Name="caixaDgHistorico"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="Transparent" BorderThickness="0"
+                              RowBackground="#0C0C18" AlternatingRowBackground="#0F0F1E"
+                              Foreground="#B0B0D0" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#14142A"
+                              ColumnHeaderHeight="38" RowHeight="52"
+                              SelectionMode="Single"
+                              CanUserResizeColumns="False" CanUserSortColumns="False">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background"       Value="#08080E"/>
+                                <Setter Property="Foreground"       Value="#40406A"/>
+                                <Setter Property="FontSize"         Value="10"/>
+                                <Setter Property="FontWeight"       Value="Bold"/>
+                                <Setter Property="Padding"          Value="16,0"/>
+                                <Setter Property="BorderBrush"      Value="#14142A"/>
+                                <Setter Property="BorderThickness"  Value="0,0,0,1"/>
+                                <Setter Property="SeparatorBrush"   Value="#1A1A2E"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="BorderBrush"     Value="#12122A"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#14142E"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#1A1A38"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Padding="16,0" Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+
+                            <!-- STATUS -->
+                            <DataGridTemplateColumn Header="STATUS" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="12" Padding="10,4" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1A1A2E"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="aberto">
+                                                            <Setter Property="Background" Value="#0C2014"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="10" FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text"       Value="⏹ FECHADO"/>
+                                                        <Setter Property="Foreground" Value="#44446A"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="aberto">
+                                                                <Setter Property="Text"       Value="● ABERTO"/>
+                                                                <Setter Property="Foreground" Value="#50FA7B"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- ABERTURA -->
+                            <DataGridTemplateColumn Header="ABERTURA" Width="155">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding AberturaTexto}" Foreground="#C0C0E0"
+                                                       FontSize="12" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- FECHAMENTO -->
+                            <DataGridTemplateColumn Header="FECHAMENTO" Width="155">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding FechamentoTexto}" Foreground="#6C6F85"
+                                                   FontSize="12"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- DURAÇÃO -->
+                            <DataGridTemplateColumn Header="DURAÇÃO" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DuracaoTexto}" Foreground="#55557A"
+                                                   FontSize="12"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- SALDO INICIAL -->
+                            <DataGridTemplateColumn Header="SALDO INICIAL" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SaldoInicialTexto}" Foreground="#7070A0"
+                                                   FontSize="12"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- ENTRADAS -->
+                            <DataGridTemplateColumn Header="ENTRADAS" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding EntradasTexto}" Foreground="#50FA7B"
+                                                   FontSize="12" FontWeight="SemiBold"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- SAÍDAS -->
+                            <DataGridTemplateColumn Header="SAÍDAS" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SaidasTexto}" Foreground="#FF5555"
+                                                   FontSize="12" FontWeight="SemiBold"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- SALDO FINAL -->
+                            <DataGridTemplateColumn Header="SALDO FINAL" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SaldoFinalTexto}" Foreground="#E0E0F8"
+                                                   FontSize="13" FontWeight="Bold"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
             </Grid>
 
             <!-- ══════════════ OVERLAY DE CARREGAMENTO ══════════════ -->

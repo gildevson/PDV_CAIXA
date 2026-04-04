@@ -67,10 +67,11 @@ namespace PDV_CAIXA.Repositories {
             conn.Open();
             using var tx = conn.BeginTransaction();
 
-            // Salva o pedido
-            conn.Execute(
+            // Salva o pedido e recupera o número gerado pelo SERIAL
+            pedido.Numero = conn.ExecuteScalar<int>(
                 @"INSERT INTO pedidos (id, data, total, usuario_id, status, forma_pagamento)
-                  VALUES (@Id, @Data, @Total, @UsuarioId, @Status, @FormaPagamento)",
+                  VALUES (@Id, @Data, @Total, @UsuarioId, @Status, @FormaPagamento)
+                  RETURNING numero",
                 pedido, tx);
 
             // Salva cada item e desconta estoque

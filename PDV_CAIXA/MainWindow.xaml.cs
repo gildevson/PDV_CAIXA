@@ -17,8 +17,12 @@ namespace PDV_CAIXA {
         private readonly ProdutoService    _produtoService    = new();
         private readonly PedidoService     _pedidoService     = new();
         private readonly PedidoRepository  _pedidoRepository  = new();
+        private readonly CaixaService      _caixaService      = new();
         private List<ProdutoViewModel>     _todosProdutos     = new();
         private bool                       _filtroSoAtivos    = false;
+
+        // ── Caixa ────────────────────────────────────────────────────
+        private Models.Caixa? _caixaAtivo;
 
         // ── PDV ──────────────────────────────────────────────────────
         private readonly ObservableCollection<CarrinhoItemViewModel> _carrinho = new();
@@ -133,6 +137,7 @@ namespace PDV_CAIXA {
             pageUsuarios.Visibility  = Visibility.Collapsed;
             pagePedidos.Visibility   = Visibility.Collapsed;
             pageHistorico.Visibility = Visibility.Collapsed;
+            pageCaixa.Visibility     = Visibility.Collapsed;
             pagina.Visibility        = Visibility.Visible;
         }
 
@@ -143,6 +148,7 @@ namespace PDV_CAIXA {
             btnMenuUsuarios.Style  = (Style)FindResource("MenuButton");
             btnMenuPedidos.Style   = (Style)FindResource("MenuButton");
             btnMenuHistorico.Style = (Style)FindResource("MenuButton");
+            btnMenuCaixa.Style     = (Style)FindResource("MenuButton");
         }
 
         // ── Overlay de carregamento ──────────────────────────────────
@@ -616,7 +622,14 @@ namespace PDV_CAIXA {
                     Subtotal      = c.Subtotal
                 }).ToList();
 
-                _pedidoService.Finalizar(_usuarioLogado.Id, itens, janela.FormaSelecionada);
+                var pedido = _pedidoService.Finalizar(_usuarioLogado.Id, itens, janela.FormaSelecionada);
+
+                // Registra entrada no caixa para pagamentos em dinheiro
+                var valorDinheiro = janela.Pagamentos
+                    .Where(p => p.Forma == "dinheiro")
+                    .Sum(p => p.Valor) - janela.Troco;
+                if (valorDinheiro > 0)
+                    CaixaRegistrarVenda(valorDinheiro, pedido.Id, pedido.Numero);
 
                 _carrinho.Clear();
                 PdvAtualizarTotal();
@@ -637,9 +650,20 @@ namespace PDV_CAIXA {
         }
 
         private void PdvAtualizarTotal() {
-            var total = _carrinho.Sum(i => i.Subtotal);
-            pdvTxtTotal.Text      = total.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
-            pdvTxtTotalItens.Text = $"{_carrinho.Sum(i => i.Quantidade)} item(ns)";
+            var total   = _carrinho.Sum(i => i.Subtotal);
+            var qtdItens = _carrinho.Sum(i => i.Quantidade);
+            var ptBR    = new System.Globalization.CultureInfo("pt-BR");
+
+            pdvTxtTotal.Text      = total.ToString("C2", ptBR);
+            pdvTxtTotalItens.Text = qtdItens == 1 ? "1 item" : $"{qtdItens} itens";
+
+            // Badge no cabeçalho do carrinho
+            if (qtdItens > 0) {
+                pdvTxtBadgeItens.Text    = qtdItens.ToString();
+                pdvBadgeItens.Visibility = Visibility.Visible;
+            } else {
+                pdvBadgeItens.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void PdvAtualizarVisibilidade() {
@@ -787,6 +811,144 @@ namespace PDV_CAIXA {
         private void BtnSair_Click(object sender, RoutedEventArgs e) {
             new LoginWindow().Show();
             this.Close();
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ── CAIXA ────────────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+
+        private void BtnMenuCaixa_Click(object sender, RoutedEventArgs e) {
+            MostrarPagina(pageCaixa);
+            ResetarMenus();
+            btnMenuCaixa.Style = (Style)FindResource("MenuButtonActive");
+            CaixaCarregar();
+        }
+
+        private void CaixaCarregar() {
+            try {
+                _caixaAtivo = _caixaService.ObterCaixaAberto();
+                if (_caixaAtivo == null) {
+                    caixaPanelFechado.Visibility = Visibility.Visible;
+                    caixaPanelAberto.Visibility  = Visibility.Collapsed;
+                } else {
+                    CaixaCarregarDados();
+                }
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao carregar caixa:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CaixaCarregarDados() {
+            if (_caixaAtivo == null) return;
+
+            caixaPanelFechado.Visibility = Visibility.Collapsed;
+            caixaPanelAberto.Visibility  = Visibility.Visible;
+
+            var ptBR = new System.Globalization.CultureInfo("pt-BR");
+            caixaTxtAbertura.Text = $"Aberto em {_caixaAtivo.DataAbertura:dd/MM/yyyy} às {_caixaAtivo.DataAbertura:HH:mm}  •  Saldo inicial: {_caixaAtivo.SaldoInicial.ToString("C2", ptBR)}";
+
+            var (saldo, entradas, saidas) = _caixaService.ObterResumo(_caixaAtivo.Id);
+            caixaTxtSaldo.Text    = saldo.ToString("C2", ptBR);
+            caixaTxtEntradas.Text = entradas.ToString("C2", ptBR);
+            caixaTxtSaidas.Text   = saidas.ToString("C2", ptBR);
+
+            var movs = _caixaService.ListarMovimentacoes(_caixaAtivo.Id)
+                .Select(m => new MovimentacaoViewModel {
+                    Id        = m.Id,
+                    Tipo      = m.Tipo,
+                    Descricao = m.Descricao,
+                    Valor     = m.Valor,
+                    Data      = m.Data,
+                    Origem    = m.Origem
+                }).ToList();
+
+            caixaDgMovimentacoes.ItemsSource = movs;
+            caixaEmptyState.Visibility = movs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnAbrirCaixa_Click(object sender, RoutedEventArgs e) {
+            var janela = new AbrirCaixaWindow { Owner = this };
+            if (janela.ShowDialog() != true) return;
+            try {
+                _caixaAtivo = _caixaService.AbrirCaixa(janela.SaldoInicial, _usuarioLogado.Id);
+                CaixaCarregarDados();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao abrir caixa:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnFecharCaixa_Click(object sender, RoutedEventArgs e) {
+            if (_caixaAtivo == null) return;
+            try {
+                var (_, entradas, saidas) = _caixaService.ObterResumo(_caixaAtivo.Id);
+                var movimentacoes         = _caixaService.ListarMovimentacoes(_caixaAtivo.Id);
+
+                var janela = new Views.FechamentoCaixaWindow(
+                    _caixaAtivo, _usuarioLogado.Nome, entradas, saidas, movimentacoes) { Owner = this };
+
+                if (janela.ShowDialog() != true) return;
+
+                _caixaService.FecharCaixa(_caixaAtivo.Id);
+                _caixaAtivo = null;
+                caixaPanelAberto.Visibility  = Visibility.Collapsed;
+                caixaPanelFechado.Visibility = Visibility.Visible;
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao fechar caixa:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnNovaEntrada_Click(object sender, RoutedEventArgs e) {
+            if (_caixaAtivo == null) return;
+            var janela = new MovimentacaoWindow("entrada") { Owner = this };
+            if (janela.ShowDialog() != true) return;
+            try {
+                _caixaService.RegistrarEntrada(_caixaAtivo.Id, janela.Descricao, janela.Valor);
+                CaixaCarregarDados();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao registrar entrada:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnNovaSaida_Click(object sender, RoutedEventArgs e) {
+            if (_caixaAtivo == null) return;
+            var janela = new MovimentacaoWindow("saida") { Owner = this };
+            if (janela.ShowDialog() != true) return;
+            try {
+                _caixaService.RegistrarSaida(_caixaAtivo.Id, janela.Descricao, janela.Valor);
+                CaixaCarregarDados();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao registrar saída:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnHistoricoCaixa_Click(object sender, RoutedEventArgs e) {
+            var janela = new Views.HistoricoCaixaWindow { Owner = this };
+            janela.ShowDialog();
+        }
+
+        private void BtnVoltarCaixa_Click(object sender, RoutedEventArgs e) {
+            caixaPanelHistorico.Visibility = Visibility.Collapsed;
+            CaixaCarregar();
+        }
+
+        // Chamado após finalizar pedido com dinheiro — registra entrada no caixa automaticamente
+        private void CaixaRegistrarVenda(decimal valorDinheiro, Guid pedidoId, int numeroPedido) {
+            if (_caixaAtivo == null) return;
+            try {
+                _caixaService.RegistrarEntrada(
+                    _caixaAtivo.Id,
+                    $"Venda #{numeroPedido:D4}",
+                    valorDinheiro,
+                    pedidoId,
+                    "venda");
+            } catch {
+                // Não interrompe o fluxo se o caixa não estiver aberto
+            }
         }
     }
 }

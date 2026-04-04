@@ -5,7 +5,7 @@ namespace PDV_CAIXA.Services {
     public class PedidoService {
         private readonly PedidoRepository _repo = new();
 
-        public void Finalizar(Guid usuarioId, IEnumerable<PedidoItem> itens, string formaPagamento) {
+        public Pedido Finalizar(Guid usuarioId, IEnumerable<PedidoItem> itens, string formaPagamento) {
             var lista  = itens.ToList();
             var pedido = new Pedido {
                 Id             = Guid.NewGuid(),
@@ -22,6 +22,7 @@ namespace PDV_CAIXA.Services {
             }
 
             _repo.Salvar(pedido, lista);
+            return pedido;
         }
     }
 }

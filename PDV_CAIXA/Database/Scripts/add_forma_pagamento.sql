@@ -8,4 +8,4 @@ ALTER TABLE pedidos
 
 ALTER TABLE pedidos DROP CONSTRAINT IF EXISTS chk_forma_pagamento;
 ALTER TABLE pedidos
-    ADD CONSTRAINT chk_forma_pagamento CHECK (forma_pagamento IN ('pix', 'dinheiro', 'credito', 'debito'));
+    ADD CONSTRAINT chk_forma_pagamento CHECK (forma_pagamento IN ('pix', 'dinheiro', 'credito', 'debito', 'misto'));
