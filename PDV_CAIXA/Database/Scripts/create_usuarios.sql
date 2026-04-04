@@ -5,7 +5,7 @@
 -- ============================================================
 
 -- ── 1. CRIAR TABELA ──────────────────────────────────────────
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     id     UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     nome   VARCHAR(100) NOT NULL UNIQUE,
     senha  VARCHAR(255) NOT NULL,

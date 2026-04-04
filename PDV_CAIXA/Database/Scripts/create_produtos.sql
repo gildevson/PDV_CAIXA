@@ -5,7 +5,7 @@
 -- ============================================================
 
 -- ── 1. CRIAR TABELA ──────────────────────────────────────────
-CREATE TABLE produtos (
+CREATE TABLE IF NOT EXISTS produtos (
     id             UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     nome           VARCHAR(100)   NOT NULL,
     descricao      TEXT           NULL,
@@ -17,9 +17,9 @@ CREATE TABLE produtos (
 );
 
 -- ── 2. ÍNDICES ───────────────────────────────────────────────
-CREATE INDEX idx_produtos_nome          ON produtos(nome);
-CREATE INDEX idx_produtos_codigo_barras ON produtos(codigo_barras);
-CREATE INDEX idx_produtos_ativo         ON produtos(ativo);
+CREATE INDEX IF NOT EXISTS idx_produtos_nome          ON produtos(nome);
+CREATE INDEX IF NOT EXISTS idx_produtos_codigo_barras ON produtos(codigo_barras);
+CREATE INDEX IF NOT EXISTS idx_produtos_ativo         ON produtos(ativo);
 
 -- ── 3. INSERTS DE EXEMPLO ────────────────────────────────────
 INSERT INTO produtos (nome, descricao, codigo_barras, preco, estoque) VALUES

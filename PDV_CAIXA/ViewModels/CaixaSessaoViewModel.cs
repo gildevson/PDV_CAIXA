@@ -14,12 +14,29 @@ namespace PDV_CAIXA.ViewModels {
         public string    Status         { get; set; } = "";
         public string    NomeOperador   { get; set; } = "";
 
-        public string AberturaTexto    => DataAbertura.ToString("dd/MM/yyyy  HH:mm");
-        public string FechamentoTexto  => DataFechamento?.ToString("dd/MM/yyyy  HH:mm") ?? "Em aberto";
+        // ── Campos do fechamento (null quando sessão ainda aberta) ────────
+        public decimal? TotalDinheiro  { get; set; }
+        public decimal? TotalCredito   { get; set; }
+        public decimal? TotalDebito    { get; set; }
+        public decimal? TotalPix       { get; set; }
+        public decimal? SaldoEsperado  { get; set; }
+        public decimal? SaldoReal      { get; set; }
+        public decimal? Diferenca      { get; set; }
+
+        // ── Textos formatados ─────────────────────────────────────────────
+        public string AberturaTexto     => DataAbertura.ToString("dd/MM/yyyy  HH:mm");
+        public string FechamentoTexto   => DataFechamento?.ToString("dd/MM/yyyy  HH:mm") ?? "Em aberto";
         public string SaldoInicialTexto => SaldoInicial.ToString("C2", PtBR);
-        public string EntradasTexto    => TotalEntradas.ToString("C2", PtBR);
-        public string SaidasTexto      => TotalSaidas.ToString("C2", PtBR);
-        public string SaldoFinalTexto  => SaldoFinal.ToString("C2", PtBR);
+        public string EntradasTexto     => TotalEntradas.ToString("C2", PtBR);
+        public string SaidasTexto       => TotalSaidas.ToString("C2", PtBR);
+        public string SaldoFinalTexto   => SaldoFinal.ToString("C2", PtBR);
+        public string DinheiroTexto     => (TotalDinheiro ?? 0).ToString("C2", PtBR);
+        public string CreditoTexto      => (TotalCredito  ?? 0).ToString("C2", PtBR);
+        public string DebitoTexto       => (TotalDebito   ?? 0).ToString("C2", PtBR);
+        public string PixtTexto         => (TotalPix      ?? 0).ToString("C2", PtBR);
+        public string DiferencaTexto    => Diferenca.HasValue
+            ? (Diferenca >= 0 ? "+ " : "− ") + Math.Abs(Diferenca.Value).ToString("C2", PtBR)
+            : "-";
 
         public string DuracaoTexto {
             get {

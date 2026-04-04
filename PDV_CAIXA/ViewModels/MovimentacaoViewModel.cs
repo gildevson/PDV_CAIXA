@@ -9,10 +9,18 @@ namespace PDV_CAIXA.ViewModels {
         public string  Descricao { get; set; } = "";
         public decimal Valor     { get; set; }
         public DateTime Data     { get; set; }
-        public string  Origem    { get; set; } = "manual";
+        public string  Origem         { get; set; } = "manual";
+        public string? FormaPagamento { get; set; }
 
         public string TipoTexto   => Tipo == "entrada" ? "Entrada" : "Saída";
         public string OrigemTexto => Origem == "venda"  ? "PDV"    : "Manual";
+        public string FormaTexto  => FormaPagamento switch {
+            "dinheiro" => "💵 Dinheiro",
+            "credito"  => "💳 Crédito",
+            "debito"   => "💳 Débito",
+            "pix"      => "📱 PIX",
+            _          => "—"
+        };
         public string DataTexto   => Data.ToString("dd/MM HH:mm", _ptBR);
 
         public string ValorTexto  => Tipo == "entrada"

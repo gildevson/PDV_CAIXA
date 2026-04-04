@@ -608,6 +608,14 @@ namespace PDV_CAIXA {
         private void PdvBtnFinalizar_Click(object sender, RoutedEventArgs e) {
             if (_carrinho.Count == 0) return;
 
+            // Caixa deve estar aberto para registrar os movimentos da venda
+            if (_caixaAtivo == null) {
+                MessageBox.Show(
+                    "Nenhum caixa aberto.\n\nAbra o caixa antes de finalizar uma venda.",
+                    "Caixa Fechado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var totalValor = _carrinho.Sum(i => i.Subtotal);
 
             var janela = new Views.PagamentoWindow(totalValor) { Owner = this };
@@ -624,17 +632,24 @@ namespace PDV_CAIXA {
 
                 var pedido = _pedidoService.Finalizar(_usuarioLogado.Id, itens, janela.FormaSelecionada);
 
-                // Registra entrada no caixa para pagamentos em dinheiro
-                var valorDinheiro = janela.Pagamentos
-                    .Where(p => p.Forma == "dinheiro")
-                    .Sum(p => p.Valor) - janela.Troco;
-                if (valorDinheiro > 0)
-                    CaixaRegistrarVenda(valorDinheiro, pedido.Id, pedido.Numero);
+                // Registra TODAS as formas de pagamento no caixa
+                foreach (var pag in janela.Pagamentos) {
+                    // Para dinheiro: desconta o troco (valor líquido que ficou no caixa)
+                    var valorLiquido = pag.Forma == "dinheiro"
+                        ? pag.Valor - janela.Troco
+                        : pag.Valor;
+                    if (valorLiquido > 0)
+                        CaixaRegistrarVenda(valorLiquido, pag.Forma, pedido.Id, pedido.Numero);
+                }
 
                 _carrinho.Clear();
                 PdvAtualizarTotal();
                 PdvAtualizarVisibilidade();
                 PdvCarregarProdutos();
+
+                // Atualiza o painel de caixa para refletir os novos movimentos
+                if (_caixaAtivo != null && caixaPanelAberto.Visibility == Visibility.Visible)
+                    CaixaCarregarDados();
 
                 var ptBR     = new System.Globalization.CultureInfo("pt-BR");
                 var temTroco = janela.Troco > 0 && janela.Pagamentos.Any(p => p.Forma == "dinheiro");
@@ -855,16 +870,53 @@ namespace PDV_CAIXA {
 
             var movs = _caixaService.ListarMovimentacoes(_caixaAtivo.Id)
                 .Select(m => new MovimentacaoViewModel {
-                    Id        = m.Id,
-                    Tipo      = m.Tipo,
-                    Descricao = m.Descricao,
-                    Valor     = m.Valor,
-                    Data      = m.Data,
-                    Origem    = m.Origem
+                    Id             = m.Id,
+                    Tipo           = m.Tipo,
+                    Descricao      = m.Descricao,
+                    Valor          = m.Valor,
+                    Data           = m.Data,
+                    Origem         = m.Origem,
+                    FormaPagamento = m.FormaPagamento
                 }).ToList();
 
             caixaDgMovimentacoes.ItemsSource = movs;
-            caixaEmptyState.Visibility = movs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            caixaDetalhePanel.Visibility     = Visibility.Collapsed;
+            caixaEmptyState.Visibility       = movs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void CaixaDgMovimentacoes_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (caixaDgMovimentacoes.SelectedItem is not MovimentacaoViewModel mov) {
+                caixaDetalhePanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            var ptBR      = new System.Globalization.CultureInfo("pt-BR");
+            var isEntrada = mov.Tipo == "entrada";
+
+            caixaDetalheIconeBd.Background = new System.Windows.Media.SolidColorBrush(
+                isEntrada
+                    ? System.Windows.Media.Color.FromRgb(0x0A, 0x2A, 0x0A)
+                    : System.Windows.Media.Color.FromRgb(0x2A, 0x0A, 0x0A));
+
+            caixaDetalheIcone.Text = isEntrada ? "⬆" : "⬇";
+            caixaDetalheIcone.Foreground = new System.Windows.Media.SolidColorBrush(
+                isEntrada
+                    ? System.Windows.Media.Color.FromRgb(0x50, 0xFA, 0x7B)
+                    : System.Windows.Media.Color.FromRgb(0xFF, 0x55, 0x55));
+
+            caixaDetalheDescricao.Text = mov.Descricao;
+            caixaDetalheData.Text      = mov.Data.ToString("dd/MM/yyyy  HH:mm:ss", ptBR);
+            caixaDetalheForma.Text     = mov.FormaTexto;
+
+            caixaDetalheValor.Text = isEntrada
+                ? "+ " + mov.Valor.ToString("C2", ptBR)
+                : "− " + mov.Valor.ToString("C2", ptBR);
+            caixaDetalheValor.Foreground = new System.Windows.Media.SolidColorBrush(
+                isEntrada
+                    ? System.Windows.Media.Color.FromRgb(0x50, 0xFA, 0x7B)
+                    : System.Windows.Media.Color.FromRgb(0xFF, 0x6B, 0x6B));
+
+            caixaDetalhePanel.Visibility = Visibility.Visible;
         }
 
         private void BtnAbrirCaixa_Click(object sender, RoutedEventArgs e) {
@@ -882,15 +934,15 @@ namespace PDV_CAIXA {
         private void BtnFecharCaixa_Click(object sender, RoutedEventArgs e) {
             if (_caixaAtivo == null) return;
             try {
-                var (_, entradas, saidas) = _caixaService.ObterResumo(_caixaAtivo.Id);
-                var movimentacoes         = _caixaService.ListarMovimentacoes(_caixaAtivo.Id);
+                var formas        = _caixaService.ObterTotaisPorForma(_caixaAtivo.Id);
+                var movimentacoes = _caixaService.ListarMovimentacoes(_caixaAtivo.Id);
 
                 var janela = new Views.FechamentoCaixaWindow(
-                    _caixaAtivo, _usuarioLogado.Nome, entradas, saidas, movimentacoes) { Owner = this };
+                    _caixaAtivo, _usuarioLogado.Nome, formas, movimentacoes) { Owner = this };
 
                 if (janela.ShowDialog() != true) return;
 
-                _caixaService.FecharCaixa(_caixaAtivo.Id);
+                _caixaService.FecharCaixa(_caixaAtivo.Id, janela.SaldoRealInformado);
                 _caixaAtivo = null;
                 caixaPanelAberto.Visibility  = Visibility.Collapsed;
                 caixaPanelFechado.Visibility = Visibility.Visible;
@@ -927,8 +979,56 @@ namespace PDV_CAIXA {
         }
 
         private void BtnHistoricoCaixa_Click(object sender, RoutedEventArgs e) {
-            var janela = new Views.HistoricoCaixaWindow { Owner = this };
-            janela.ShowDialog();
+            caixaPanelAberto.Visibility   = Visibility.Collapsed;
+            caixaPanelFechado.Visibility  = Visibility.Collapsed;
+            caixaPanelHistorico.Visibility = Visibility.Visible;
+            CaixaHistoricoCarregar();
+        }
+
+        private void CaixaHistoricoCarregar() {
+            try {
+                var sessoes = _caixaService.ListarHistorico().ToList();
+                caixaDgHistorico.ItemsSource = sessoes;
+                caixaHistoricoTxtTotal.Text  = $"{sessoes.Count} {(sessoes.Count == 1 ? "sessão" : "sessões")}";
+                caixaHistoricoMovPanel.Visibility = Visibility.Collapsed;
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao carregar histórico:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CaixaDgHistorico_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (caixaDgHistorico.SelectedItem is not ViewModels.CaixaSessaoViewModel sessao) {
+                caixaHistoricoMovPanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+            try {
+                var movs = _caixaService.ListarMovimentacoes(sessao.Id)
+                    .OrderByDescending(m => m.Data)
+                    .Select(m => new ViewModels.MovimentacaoViewModel {
+                        Id             = m.Id,
+                        Tipo           = m.Tipo,
+                        Descricao      = m.Descricao,
+                        Valor          = m.Valor,
+                        Data           = m.Data,
+                        Origem         = m.Origem,
+                        FormaPagamento = m.FormaPagamento
+                    }).ToList();
+
+                caixaHistoricoDgMovs.ItemsSource = movs;
+                var fechamento = sessao.DataFechamento.HasValue
+                    ? $"  →  {sessao.FechamentoTexto}"
+                    : "  →  em aberto";
+                caixaHistoricoMovSessaoInfo.Text =
+                    $"{sessao.NomeOperador}  ·  {sessao.AberturaTexto}{fechamento}";
+                caixaHistoricoMovQtd.Text = movs.Count == 0
+                    ? "sem movimentações"
+                    : $"{movs.Count} {(movs.Count == 1 ? "movimentação" : "movimentações")}";
+                caixaHistoricoMovPanel.Visibility = Visibility.Visible;
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao carregar movimentações:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnVoltarCaixa_Click(object sender, RoutedEventArgs e) {
@@ -936,18 +1036,20 @@ namespace PDV_CAIXA {
             CaixaCarregar();
         }
 
-        // Chamado após finalizar pedido com dinheiro — registra entrada no caixa automaticamente
-        private void CaixaRegistrarVenda(decimal valorDinheiro, Guid pedidoId, int numeroPedido) {
+        // Registra uma forma de pagamento de uma venda no caixa
+        private void CaixaRegistrarVenda(decimal valor, string forma, Guid pedidoId, int numeroPedido) {
             if (_caixaAtivo == null) return;
             try {
-                _caixaService.RegistrarEntrada(
+                _caixaService.RegistrarVenda(
                     _caixaAtivo.Id,
                     $"Venda #{numeroPedido:D4}",
-                    valorDinheiro,
-                    pedidoId,
-                    "venda");
-            } catch {
-                // Não interrompe o fluxo se o caixa não estiver aberto
+                    valor,
+                    forma,
+                    pedidoId);
+            } catch (Exception ex) {
+                MessageBox.Show(
+                    $"Aviso: o movimento da venda #{numeroPedido:D4} ({forma}) não foi registrado no caixa.\n\n{ex.Message}",
+                    "Erro no Caixa", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

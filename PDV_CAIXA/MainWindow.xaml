@@ -2520,6 +2520,12 @@
 
                     <!-- ══ LISTA DE MOVIMENTAÇÕES ══ -->
                     <Grid Grid.Row="3" Margin="0,10,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
 
                         <!-- DataGrid -->
                         <DataGrid x:Name="caixaDgMovimentacoes"
@@ -2531,7 +2537,8 @@
                                   HorizontalGridLinesBrush="#22223A"
                                   CanUserAddRows="False" IsReadOnly="True"
                                   SelectionMode="Single" HeadersVisibility="Column"
-                                  RowHeight="50">
+                                  RowHeight="50"
+                                  SelectionChanged="CaixaDgMovimentacoes_SelectionChanged">
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
                                     <Setter Property="Background" Value="#111120"/>
@@ -2712,6 +2719,49 @@
                                        Foreground="#22223A" FontSize="11"
                                        HorizontalAlignment="Center" Margin="0,5,0,0"/>
                         </StackPanel>
+
+                        </Grid>
+
+                        <!-- ── Detalhe do movimento selecionado ── -->
+                        <Border x:Name="caixaDetalhePanel" Grid.Row="1"
+                                Visibility="Collapsed"
+                                Background="#13131F" BorderBrush="#2A2A3E"
+                                BorderThickness="0,1,0,0" Padding="18,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Ícone circular -->
+                                <Border x:Name="caixaDetalheIconeBd" Grid.Column="0"
+                                        Width="44" Height="44" CornerRadius="22"
+                                        Margin="0,0,16,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="caixaDetalheIcone" FontSize="18"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Descrição e metadados -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock x:Name="caixaDetalheDescricao"
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="#E0E0F0" TextWrapping="Wrap"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                        <TextBlock x:Name="caixaDetalheData"
+                                                   FontSize="11" Foreground="#5A5A7A"
+                                                   FontFamily="Consolas" Margin="0,0,16,0"/>
+                                        <TextBlock x:Name="caixaDetalheForma"
+                                                   FontSize="11" Foreground="#7C83FF"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Valor -->
+                                <TextBlock x:Name="caixaDetalheValor" Grid.Column="2"
+                                           FontSize="18" FontWeight="Bold"
+                                           VerticalAlignment="Center" Margin="16,0,0,0"/>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </Grid>
 
@@ -2719,7 +2769,8 @@
                 <Grid x:Name="caixaPanelHistorico" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="5*"/>
+                        <RowDefinition Height="3*" MinHeight="0"/>
                     </Grid.RowDefinitions>
 
                     <!-- Header do histórico -->
@@ -2779,6 +2830,7 @@
                     <!-- DataGrid de sessões -->
                     <DataGrid Grid.Row="1" x:Name="caixaDgHistorico"
                               AutoGenerateColumns="False" IsReadOnly="True"
+                              SelectionChanged="CaixaDgHistorico_SelectionChanged"
                               Background="Transparent" BorderThickness="0"
                               RowBackground="#0C0C18" AlternatingRowBackground="#0F0F1E"
                               Foreground="#B0B0D0" GridLinesVisibility="Horizontal"
@@ -2936,6 +2988,142 @@
 
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- ── Movimentos da sessão selecionada ────────────────── -->
+                    <Grid Grid.Row="2" x:Name="caixaHistoricoMovPanel" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header do painel -->
+                        <Border Grid.Row="0" Background="#08080F" Padding="20,10">
+                            <Grid>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="MOVIMENTAÇÕES DA SESSÃO"
+                                               Foreground="#44446A" FontSize="10" FontWeight="Bold"
+                                               Margin="0,0,0,3"/>
+                                    <TextBlock x:Name="caixaHistoricoMovSessaoInfo"
+                                               Foreground="#9090C0" FontSize="13" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        Background="#12121E" CornerRadius="8" Padding="12,5">
+                                    <TextBlock x:Name="caixaHistoricoMovQtd"
+                                               Foreground="#55557A" FontSize="11" FontWeight="SemiBold"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <Rectangle Grid.Row="0" Height="1" VerticalAlignment="Bottom" Fill="#14142A"/>
+
+                        <!-- DataGrid de movimentos -->
+                        <DataGrid Grid.Row="1" x:Name="caixaHistoricoDgMovs"
+                                  AutoGenerateColumns="False" IsReadOnly="True"
+                                  Background="Transparent" BorderThickness="0"
+                                  RowBackground="#07070F" AlternatingRowBackground="#09091A"
+                                  Foreground="#B0B0D0" GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="#10102A"
+                                  ColumnHeaderHeight="30" RowHeight="38"
+                                  SelectionMode="Single"
+                                  CanUserResizeColumns="False" CanUserSortColumns="False">
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background"      Value="#06060C"/>
+                                    <Setter Property="Foreground"      Value="#35355A"/>
+                                    <Setter Property="FontSize"        Value="10"/>
+                                    <Setter Property="FontWeight"      Value="Bold"/>
+                                    <Setter Property="Padding"         Value="14,0"/>
+                                    <Setter Property="BorderBrush"     Value="#10102A"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="SeparatorBrush"  Value="#14142E"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="BorderBrush"     Value="#0E0E28"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#12122A"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Padding="14,0" Background="{TemplateBinding Background}">
+                                                    <ContentPresenter VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.CellStyle>
+                            <DataGrid.Columns>
+
+                                <!-- TIPO -->
+                                <DataGridTemplateColumn Header="TIPO" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding TipoTexto}"
+                                                       Foreground="{Binding CorTipo}"
+                                                       FontSize="11" FontWeight="Bold"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- DESCRIÇÃO -->
+                                <DataGridTemplateColumn Header="DESCRIÇÃO" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Descricao}"
+                                                       Foreground="#A0A0C8" FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- DATA -->
+                                <DataGridTemplateColumn Header="DATA / HORA" Width="130">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DataTexto}"
+                                                       Foreground="#55557A" FontSize="11"
+                                                       FontFamily="Consolas"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- FORMA PAGAMENTO -->
+                                <DataGridTemplateColumn Header="FORMA" Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FormaTexto}"
+                                                       Foreground="#6C6F85" FontSize="11"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- VALOR -->
+                                <DataGridTemplateColumn Header="VALOR" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding ValorTexto}"
+                                                       Foreground="{Binding CorValor}"
+                                                       FontSize="12" FontWeight="Bold"
+                                                       HorizontalAlignment="Right"
+                                                       FontFamily="Consolas"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+
                 </Grid>
 
             </Grid>

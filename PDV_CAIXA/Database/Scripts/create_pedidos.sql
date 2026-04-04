@@ -1,21 +1,24 @@
 -- ============================================================
 -- BANCO: pdv_wpf
 -- TABELAS: pedidos, pedido_itens
--- Atualizado: 2026-03-31
+-- Atualizado: 2026-04-04
 -- ============================================================
 
 -- ── 1. PEDIDOS (cabeçalho) ───────────────────────────────────
-CREATE TABLE pedidos (
-    id          UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-    data        TIMESTAMPTZ   NOT NULL DEFAULT now(),
-    total       NUMERIC(10,2) NOT NULL DEFAULT 0,
-    usuario_id  UUID          NOT NULL REFERENCES usuarios(id),
-    status      VARCHAR(20)   NOT NULL DEFAULT 'finalizado'
-                CHECK (status IN ('finalizado', 'cancelado'))
+CREATE TABLE IF NOT EXISTS pedidos (
+    id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+    numero          SERIAL        NOT NULL UNIQUE,
+    data            TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    total           NUMERIC(10,2) NOT NULL DEFAULT 0,
+    usuario_id      UUID          NOT NULL REFERENCES usuarios(id),
+    status          VARCHAR(20)   NOT NULL DEFAULT 'finalizado'
+                    CHECK (status IN ('finalizado', 'cancelado')),
+    forma_pagamento VARCHAR(20)   NOT NULL DEFAULT 'dinheiro'
+                    CHECK (forma_pagamento IN ('pix', 'dinheiro', 'credito', 'debito', 'misto'))
 );
 
 -- ── 2. ITENS DO PEDIDO ───────────────────────────────────────
-CREATE TABLE pedido_itens (
+CREATE TABLE IF NOT EXISTS pedido_itens (
     id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     pedido_id       UUID          NOT NULL REFERENCES pedidos(id) ON DELETE CASCADE,
     produto_id      UUID          NOT NULL REFERENCES produtos(id),
@@ -26,14 +29,15 @@ CREATE TABLE pedido_itens (
 );
 
 -- ── 3. ÍNDICES ───────────────────────────────────────────────
-CREATE INDEX idx_pedidos_data       ON pedidos(data DESC);
-CREATE INDEX idx_pedidos_usuario    ON pedidos(usuario_id);
-CREATE INDEX idx_pedido_itens_pedido ON pedido_itens(pedido_id);
+CREATE INDEX IF NOT EXISTS idx_pedidos_numero    ON pedidos(numero);
+CREATE INDEX IF NOT EXISTS idx_pedidos_data      ON pedidos(data DESC);
+CREATE INDEX IF NOT EXISTS idx_pedidos_usuario   ON pedidos(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_pedido_itens_pedido ON pedido_itens(pedido_id);
 
 -- ── 4. CONSULTAS ÚTEIS ───────────────────────────────────────
 
 -- Listar pedidos com totais
-SELECT p.id, p.data, p.total, p.status, u.nome AS operador
+SELECT p.id, p.numero, p.data, p.total, p.status, p.forma_pagamento, u.nome AS operador
 FROM pedidos p
 JOIN usuarios u ON u.id = p.usuario_id
 ORDER BY p.data DESC;
