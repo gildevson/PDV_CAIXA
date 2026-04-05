@@ -80,13 +80,14 @@ CREATE INDEX IF NOT EXISTS idx_pedido_itens_pedido ON pedido_itens(pedido_id);
 -- 4. CAIXA
 -- ══════════════════════════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS caixa (
-    id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-    data_abertura   TIMESTAMPTZ   NOT NULL DEFAULT now(),
-    data_fechamento TIMESTAMPTZ   NULL,
-    saldo_inicial   NUMERIC(10,2) NOT NULL DEFAULT 0,
-    status          VARCHAR(20)   NOT NULL DEFAULT 'aberto'
-                        CHECK (status IN ('aberto', 'fechado')),
-    usuario_id      UUID          NOT NULL REFERENCES usuarios(id),
+    id                    UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+    data_abertura         TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    data_fechamento       TIMESTAMPTZ   NULL,
+    saldo_inicial         NUMERIC(10,2) NOT NULL DEFAULT 0,
+    status                VARCHAR(20)   NOT NULL DEFAULT 'aberto'
+                              CHECK (status IN ('aberto', 'fechado')),
+    usuario_id            UUID          NOT NULL REFERENCES usuarios(id),
+    usuario_fechamento_id UUID          NULL     REFERENCES usuarios(id),
     -- Campos preenchidos no fechamento
     total_dinheiro  NUMERIC(10,2) NULL,
     total_credito   NUMERIC(10,2) NULL,
@@ -164,6 +165,9 @@ ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS forma_pagamento VARCHAR(20) NOT NUL
 ALTER TABLE pedidos DROP CONSTRAINT IF EXISTS chk_forma_pagamento;
 ALTER TABLE pedidos ADD CONSTRAINT chk_forma_pagamento
     CHECK (forma_pagamento IN ('pix', 'dinheiro', 'credito', 'debito', 'misto'));
+
+-- Adiciona usuario_fechamento_id em caixa (caso tabela já existia sem a coluna)
+ALTER TABLE caixa ADD COLUMN IF NOT EXISTS usuario_fechamento_id UUID NULL REFERENCES usuarios(id);
 
 -- Adiciona colunas de fechamento em caixa (caso tabela já existia sem elas)
 ALTER TABLE caixa ADD COLUMN IF NOT EXISTS total_dinheiro NUMERIC(10,2) NULL;

@@ -11,8 +11,9 @@ namespace PDV_CAIXA.ViewModels {
         public decimal   TotalEntradas  { get; set; }
         public decimal   TotalSaidas    { get; set; }
         public decimal   SaldoFinal     { get; set; }
-        public string    Status         { get; set; } = "";
-        public string    NomeOperador   { get; set; } = "";
+        public string    Status                   { get; set; } = "";
+        public string    NomeOperador             { get; set; } = "";
+        public string?   NomeOperadorFechamento   { get; set; }
 
         // ── Campos do fechamento (null quando sessão ainda aberta) ────────
         public decimal? TotalDinheiro  { get; set; }
@@ -24,8 +25,9 @@ namespace PDV_CAIXA.ViewModels {
         public decimal? Diferenca      { get; set; }
 
         // ── Textos formatados ─────────────────────────────────────────────
-        public string AberturaTexto     => DataAbertura.ToString("dd/MM/yyyy  HH:mm");
-        public string FechamentoTexto   => DataFechamento?.ToString("dd/MM/yyyy  HH:mm") ?? "Em aberto";
+        public string AberturaTexto          => DataAbertura.ToString("dd/MM/yyyy  HH:mm");
+        public string FechamentoTexto        => DataFechamento?.ToString("dd/MM/yyyy  HH:mm") ?? "Em aberto";
+        public string OperadorFechamentoTexto => NomeOperadorFechamento ?? "—";
         public string SaldoInicialTexto => SaldoInicial.ToString("C2", PtBR);
         public string EntradasTexto     => TotalEntradas.ToString("C2", PtBR);
         public string SaidasTexto       => TotalSaidas.ToString("C2", PtBR);

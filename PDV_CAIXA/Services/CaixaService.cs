@@ -40,7 +40,8 @@ namespace PDV_CAIXA.Services {
         /// <param name="saldoRealDinheiro">Valor físico contado pelo operador.</param>
         /// <param name="observacao">Observação opcional (ex.: explicação de diferença).</param>
         public ResultadoFechamento FecharCaixa(Guid caixaId, decimal saldoRealDinheiro,
-                                               string? observacao = null) {
+                                               string? observacao = null,
+                                               Guid? usuarioFechamentoId = null) {
             var caixa = _repo.ObterAberto()
                 ?? throw new InvalidOperationException("Nenhum caixa aberto encontrado.");
 
@@ -59,14 +60,15 @@ namespace PDV_CAIXA.Services {
 
             _repo.Fechar(
                 caixaId,
-                totalDinheiro : formas.Dinheiro,
-                totalCredito  : formas.Credito,
-                totalDebito   : formas.Debito,
-                totalPix      : formas.Pix,
-                saldoEsperado : saldoEsperado,
-                saldoReal     : saldoRealDinheiro,
-                diferenca     : diferenca,
-                observacao    : observacao);
+                totalDinheiro        : formas.Dinheiro,
+                totalCredito         : formas.Credito,
+                totalDebito          : formas.Debito,
+                totalPix             : formas.Pix,
+                saldoEsperado        : saldoEsperado,
+                saldoReal            : saldoRealDinheiro,
+                diferenca            : diferenca,
+                observacao           : observacao,
+                usuarioFechamentoId  : usuarioFechamentoId);
 
             return new ResultadoFechamento {
                 SaldoInicial   = caixa.SaldoInicial,
@@ -190,20 +192,21 @@ namespace PDV_CAIXA.Services {
         public TotaisPorForma ObterTotaisPorForma(Guid caixaId)
             => _repo.ObterTotaisPorForma(caixaId);
 
-        /// <summary>Histórico com nome do operador.</summary>
+        /// <summary>Histórico com nomes do operador de abertura e fechamento.</summary>
         public IEnumerable<CaixaSessaoViewModel> ListarHistorico() {
             return _repo.ListarHistoricoDetalhado().Select(t => {
                 var (entradas, saidas) = _repo.ObterTotais(t.caixa.Id);
                 return new CaixaSessaoViewModel {
-                    Id             = t.caixa.Id,
-                    DataAbertura   = t.caixa.DataAbertura,
-                    DataFechamento = t.caixa.DataFechamento,
-                    SaldoInicial   = t.caixa.SaldoInicial,
-                    TotalEntradas  = entradas,
-                    TotalSaidas    = saidas,
-                    SaldoFinal     = t.caixa.SaldoInicial + entradas - saidas,
-                    Status         = t.caixa.Status,
-                    NomeOperador   = t.nomeOperador,
+                    Id                        = t.caixa.Id,
+                    DataAbertura              = t.caixa.DataAbertura,
+                    DataFechamento            = t.caixa.DataFechamento,
+                    SaldoInicial              = t.caixa.SaldoInicial,
+                    TotalEntradas             = entradas,
+                    TotalSaidas               = saidas,
+                    SaldoFinal                = t.caixa.SaldoInicial + entradas - saidas,
+                    Status                    = t.caixa.Status,
+                    NomeOperador              = t.nomeOperador,
+                    NomeOperadorFechamento    = t.nomeOperadorFechamento,
                     // Campos do fechamento (null quando aberto)
                     TotalDinheiro  = t.caixa.TotalDinheiro,
                     TotalCredito   = t.caixa.TotalCredito,

@@ -2769,8 +2769,8 @@
                 <Grid x:Name="caixaPanelHistorico" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="5*"/>
-                        <RowDefinition Height="3*" MinHeight="0"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- Header do histórico -->
@@ -2915,23 +2915,29 @@
                             </DataGridTemplateColumn>
 
                             <!-- ABERTURA -->
-                            <DataGridTemplateColumn Header="ABERTURA" Width="155">
+                            <DataGridTemplateColumn Header="ABERTURA" Width="175">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel>
                                             <TextBlock Text="{Binding AberturaTexto}" Foreground="#C0C0E0"
                                                        FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding NomeOperador}" Foreground="#55557A"
+                                                       FontSize="11" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
                             <!-- FECHAMENTO -->
-                            <DataGridTemplateColumn Header="FECHAMENTO" Width="155">
+                            <DataGridTemplateColumn Header="FECHAMENTO" Width="175">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding FechamentoTexto}" Foreground="#6C6F85"
-                                                   FontSize="12"/>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding FechamentoTexto}" Foreground="#6C6F85"
+                                                       FontSize="12"/>
+                                            <TextBlock Text="{Binding OperadorFechamentoTexto}"
+                                                       Foreground="#44446A" FontSize="11" Margin="0,2,0,0"/>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -2990,7 +2996,7 @@
                     </DataGrid>
 
                     <!-- ── Movimentos da sessão selecionada ────────────────── -->
-                    <Grid Grid.Row="2" x:Name="caixaHistoricoMovPanel" Visibility="Collapsed">
+                    <Grid Grid.Row="2" x:Name="caixaHistoricoMovPanel" Visibility="Collapsed" Height="260">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>

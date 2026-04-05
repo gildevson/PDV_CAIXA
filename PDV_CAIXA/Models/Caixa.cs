@@ -8,8 +8,9 @@ namespace PDV_CAIXA.Models {
         public DateTime  DataAbertura   { get; set; }
         public DateTime? DataFechamento { get; set; }
         public decimal   SaldoInicial   { get; set; }
-        public string    Status         { get; set; } = "aberto"; // aberto | fechado
-        public Guid      UsuarioId      { get; set; }
+        public string    Status               { get; set; } = "aberto"; // aberto | fechado
+        public Guid      UsuarioId            { get; set; }
+        public Guid?     UsuarioFechamentoId  { get; set; }
 
         // ── Campos preenchidos no fechamento ──────────────────────────────
 

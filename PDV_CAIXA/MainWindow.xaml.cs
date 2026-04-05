@@ -692,7 +692,11 @@ namespace PDV_CAIXA {
             base.OnKeyDown(e);
             if (pagePDV.Visibility != Visibility.Visible) return;
 
-            if (e.Key == Key.F12) {
+            if (e.Key == Key.F2) {
+                pdvTxtBusca.Focus();
+                pdvTxtBusca.SelectAll();
+                e.Handled = true;
+            } else if (e.Key == Key.F12) {
                 PdvBtnFinalizar_Click(this, new RoutedEventArgs());
                 e.Handled = true;
             } else if (e.Key == Key.Delete) {
@@ -942,7 +946,8 @@ namespace PDV_CAIXA {
 
                 if (janela.ShowDialog() != true) return;
 
-                _caixaService.FecharCaixa(_caixaAtivo.Id, janela.SaldoRealInformado);
+                _caixaService.FecharCaixa(_caixaAtivo.Id, janela.SaldoRealInformado,
+                    usuarioFechamentoId: _usuarioLogado.Id);
                 _caixaAtivo = null;
                 caixaPanelAberto.Visibility  = Visibility.Collapsed;
                 caixaPanelFechado.Visibility = Visibility.Visible;
@@ -1017,10 +1022,10 @@ namespace PDV_CAIXA {
 
                 caixaHistoricoDgMovs.ItemsSource = movs;
                 var fechamento = sessao.DataFechamento.HasValue
-                    ? $"  →  {sessao.FechamentoTexto}"
+                    ? $"  →  {sessao.FechamentoTexto}  (fechado por {sessao.OperadorFechamentoTexto})"
                     : "  →  em aberto";
                 caixaHistoricoMovSessaoInfo.Text =
-                    $"{sessao.NomeOperador}  ·  {sessao.AberturaTexto}{fechamento}";
+                    $"Aberto por {sessao.NomeOperador}  ·  {sessao.AberturaTexto}{fechamento}";
                 caixaHistoricoMovQtd.Text = movs.Count == 0
                     ? "sem movimentações"
                     : $"{movs.Count} {(movs.Count == 1 ? "movimentação" : "movimentações")}";

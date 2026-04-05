@@ -34,25 +34,27 @@ namespace PDV_CAIXA.Repositories {
         public void Fechar(Guid caixaId, decimal totalDinheiro, decimal totalCredito,
                            decimal totalDebito, decimal totalPix,
                            decimal saldoEsperado, decimal saldoReal, decimal diferenca,
-                           string? observacao) {
+                           string? observacao, Guid? usuarioFechamentoId = null) {
             using var conn = _conexao.CriarConexao();
             conn.Execute(
                 @"UPDATE caixa SET
-                    status         = 'fechado',
-                    data_fechamento = now(),
-                    total_dinheiro = @TotalDinheiro,
-                    total_credito  = @TotalCredito,
-                    total_debito   = @TotalDebito,
-                    total_pix      = @TotalPix,
-                    saldo_esperado = @SaldoEsperado,
-                    saldo_real     = @SaldoReal,
-                    diferenca      = @Diferenca,
-                    observacao     = @Observacao
+                    status                = 'fechado',
+                    data_fechamento       = now(),
+                    total_dinheiro        = @TotalDinheiro,
+                    total_credito         = @TotalCredito,
+                    total_debito          = @TotalDebito,
+                    total_pix             = @TotalPix,
+                    saldo_esperado        = @SaldoEsperado,
+                    saldo_real            = @SaldoReal,
+                    diferenca             = @Diferenca,
+                    observacao            = @Observacao,
+                    usuario_fechamento_id = @UsuarioFechamentoId
                   WHERE id = @Id",
                 new { Id = caixaId, TotalDinheiro = totalDinheiro, TotalCredito = totalCredito,
                       TotalDebito = totalDebito, TotalPix = totalPix,
                       SaldoEsperado = saldoEsperado, SaldoReal = saldoReal,
-                      Diferenca = diferenca, Observacao = observacao });
+                      Diferenca = diferenca, Observacao = observacao,
+                      UsuarioFechamentoId = usuarioFechamentoId });
         }
 
         // ════════════════════════════════════════════════════════════
@@ -171,38 +173,42 @@ namespace PDV_CAIXA.Repositories {
                 "SELECT * FROM caixa ORDER BY data_abertura DESC LIMIT 50");
         }
 
-        /// <summary>Lista as últimas 100 sessões com nome do operador (JOIN com usuarios).</summary>
-        public IEnumerable<(Caixa caixa, string nomeOperador)> ListarHistoricoDetalhado() {
+        /// <summary>Lista as últimas 100 sessões com nomes do operador de abertura e fechamento.</summary>
+        public IEnumerable<(Caixa caixa, string nomeOperador, string? nomeOperadorFechamento)> ListarHistoricoDetalhado() {
             using var conn = _conexao.CriarConexao();
             var rows = conn.Query(
                 @"SELECT c.id, c.data_abertura, c.data_fechamento, c.saldo_inicial,
-                         c.status, c.usuario_id,
+                         c.status, c.usuario_id, c.usuario_fechamento_id,
                          c.total_dinheiro, c.total_credito, c.total_debito, c.total_pix,
                          c.saldo_esperado, c.saldo_real, c.diferenca, c.observacao,
-                         COALESCE(u.nome, 'Desconhecido') AS nome_operador
+                         COALESCE(ua.nome, 'Desconhecido') AS nome_operador,
+                         uf.nome                           AS nome_operador_fechamento
                   FROM caixa c
-                  LEFT JOIN usuarios u ON u.id = c.usuario_id
+                  LEFT JOIN usuarios ua ON ua.id = c.usuario_id
+                  LEFT JOIN usuarios uf ON uf.id = c.usuario_fechamento_id
                   ORDER BY c.data_abertura DESC
                   LIMIT 100");
 
             return rows.Select(r => (
                 new Caixa {
-                    Id             = r.id,
-                    DataAbertura   = r.data_abertura,
-                    DataFechamento = r.data_fechamento,
-                    SaldoInicial   = r.saldo_inicial,
-                    Status         = r.status,
-                    UsuarioId      = r.usuario_id,
-                    TotalDinheiro  = r.total_dinheiro,
-                    TotalCredito   = r.total_credito,
-                    TotalDebito    = r.total_debito,
-                    TotalPix       = r.total_pix,
-                    SaldoEsperado  = r.saldo_esperado,
-                    SaldoReal      = r.saldo_real,
-                    Diferenca      = r.diferenca,
-                    Observacao     = r.observacao
+                    Id                   = r.id,
+                    DataAbertura         = r.data_abertura,
+                    DataFechamento       = r.data_fechamento,
+                    SaldoInicial         = r.saldo_inicial,
+                    Status               = r.status,
+                    UsuarioId            = r.usuario_id,
+                    UsuarioFechamentoId  = r.usuario_fechamento_id,
+                    TotalDinheiro        = r.total_dinheiro,
+                    TotalCredito         = r.total_credito,
+                    TotalDebito          = r.total_debito,
+                    TotalPix             = r.total_pix,
+                    SaldoEsperado        = r.saldo_esperado,
+                    SaldoReal            = r.saldo_real,
+                    Diferenca            = r.diferenca,
+                    Observacao           = r.observacao
                 },
-                (string)r.nome_operador
+                (string)r.nome_operador,
+                (string?)r.nome_operador_fechamento
             )).ToList();
         }
     }
