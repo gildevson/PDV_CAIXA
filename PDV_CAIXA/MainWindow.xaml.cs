@@ -18,6 +18,7 @@ namespace PDV_CAIXA {
         private readonly PedidoService     _pedidoService     = new();
         private readonly PedidoRepository  _pedidoRepository  = new();
         private readonly CaixaService      _caixaService      = new();
+        private readonly RelatorioService  _relatorioService  = new();
         private List<ProdutoViewModel>     _todosProdutos     = new();
         private bool                       _filtroSoAtivos    = false;
 
@@ -36,9 +37,10 @@ namespace PDV_CAIXA {
                 var lista = _pedidoRepository.ListarPorPeriodo(inicio).ToList();
                 var (qtd, fat) = _pedidoRepository.ObterTotais(inicio);
 
-                histDgPedidos.ItemsSource  = lista;
-                histDgItens.ItemsSource    = null;
-                histTxtDetalhe.Text        = "Selecione um pedido para ver os itens";
+                histDgPedidos.ItemsSource    = lista;
+                histDgItens.ItemsSource     = null;
+                histTxtDetalhe.Text         = "Selecione um pedido para ver os itens";
+                btnImprimirPedido.Visibility = Visibility.Collapsed;
                 histTxtQtdPedidos.Text     = qtd.ToString();
                 histTxtFaturamento.Text    = fat.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
                 histTxtContador.Text       = $"{lista.Count} pedido(s)";
@@ -73,12 +75,27 @@ namespace PDV_CAIXA {
         }
 
         private void HistDgPedidos_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            if (histDgPedidos.SelectedItem is not PedidoResumoViewModel pedido) return;
+            if (histDgPedidos.SelectedItem is not PedidoResumoViewModel pedido) {
+                btnImprimirPedido.Visibility = Visibility.Collapsed;
+                return;
+            }
             try {
-                histDgItens.ItemsSource = _pedidoRepository.ObterItens(pedido.Id).ToList();
-                histTxtDetalhe.Text     = $"Itens do Pedido {pedido.NumeroTexto}  —  {pedido.TotalTexto}";
+                histDgItens.ItemsSource      = _pedidoRepository.ObterItens(pedido.Id).ToList();
+                histTxtDetalhe.Text          = $"Itens do Pedido {pedido.NumeroTexto}  —  {pedido.TotalTexto}";
+                btnImprimirPedido.Visibility = Visibility.Visible;
             } catch (Exception ex) {
                 MessageBox.Show("Erro ao carregar itens:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnImprimirPedido_Click(object sender, RoutedEventArgs e) {
+            if (histDgPedidos.SelectedItem is not PedidoResumoViewModel pedido) return;
+            try {
+                var itens = _pedidoRepository.ObterItens(pedido.Id).ToList();
+                _relatorioService.ImprimirHistoricoPedido(pedido, itens);
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao gerar relatório:\n\n" + ex.Message,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -90,6 +107,9 @@ namespace PDV_CAIXA {
             InitializeComponent();
             _usuarioLogado = usuario;
             ConfigurarPerfil();
+            // Carrega caixa aberto imediatamente para que vendas no PDV possam ser finalizadas
+            // mesmo sem o usuário ter visitado a página de Caixa nesta sessão
+            try { _caixaAtivo = _caixaService.ObterCaixaAberto(); } catch { }
         }
 
         private void ConfigurarPerfil() {
@@ -136,9 +156,11 @@ namespace PDV_CAIXA {
             pageProdutos.Visibility  = Visibility.Collapsed;
             pageUsuarios.Visibility  = Visibility.Collapsed;
             pagePedidos.Visibility   = Visibility.Collapsed;
-            pageHistorico.Visibility = Visibility.Collapsed;
-            pageCaixa.Visibility     = Visibility.Collapsed;
-            pagina.Visibility        = Visibility.Visible;
+            pageHistorico.Visibility    = Visibility.Collapsed;
+            pageCaixa.Visibility        = Visibility.Collapsed;
+            pageRelatorios.Visibility   = Visibility.Collapsed;
+            pageFerramentas.Visibility  = Visibility.Collapsed;
+            pagina.Visibility           = Visibility.Visible;
         }
 
         private void ResetarMenus() {
@@ -147,8 +169,10 @@ namespace PDV_CAIXA {
             btnMenuProdutos.Style  = (Style)FindResource("MenuButton");
             btnMenuUsuarios.Style  = (Style)FindResource("MenuButton");
             btnMenuPedidos.Style   = (Style)FindResource("MenuButton");
-            btnMenuHistorico.Style = (Style)FindResource("MenuButton");
-            btnMenuCaixa.Style     = (Style)FindResource("MenuButton");
+            btnMenuHistorico.Style   = (Style)FindResource("MenuButton");
+            btnMenuCaixa.Style        = (Style)FindResource("MenuButton");
+            btnMenuRelatorios.Style   = (Style)FindResource("MenuButton");
+            btnMenuFerramentas.Style  = (Style)FindResource("MenuButton");
         }
 
         // ── Overlay de carregamento ──────────────────────────────────
@@ -231,9 +255,10 @@ namespace PDV_CAIXA {
                     var (q, f) = _pedidoRepository.ObterTotais(inicio);
                     return (l, q, f);
                 });
-                histDgPedidos.ItemsSource = lista;
-                histDgItens.ItemsSource   = null;
-                histTxtDetalhe.Text       = "Selecione um pedido para ver os itens";
+                histDgPedidos.ItemsSource    = lista;
+                histDgItens.ItemsSource     = null;
+                histTxtDetalhe.Text         = "Selecione um pedido para ver os itens";
+                btnImprimirPedido.Visibility = Visibility.Collapsed;
                 histTxtQtdPedidos.Text    = qtd.ToString();
                 histTxtFaturamento.Text   = fat.ToString("C2", new System.Globalization.CultureInfo("pt-BR"));
                 histTxtContador.Text      = $"{lista.Count} pedido(s)";
@@ -657,7 +682,16 @@ namespace PDV_CAIXA {
                     ? $"Pedido finalizado com sucesso!\n\n💵 Troco: {janela.Troco.ToString("C2", ptBR)}"
                     : "Pedido finalizado com sucesso!";
 
-                MessageBox.Show(msg, "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                var printMsg = msg + "\n\nDeseja imprimir o cupom?";
+                var printResult = MessageBox.Show(printMsg, "Sucesso",
+                    MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                if (printResult == MessageBoxResult.Yes)
+                {
+                    var itensCupom   = _pedidoRepository.ObterItens(pedido.Id).ToList();
+                    var pagsCupom    = janela.Pagamentos.Select(p => new PagamentoCupom(p.Forma, p.Valor)).ToList();
+                    _relatorioService.ImprimirCupomVenda(pedido, itensCupom, pagsCupom, janela.Troco, _usuarioLogado.Nome);
+                }
             } catch (Exception ex) {
                 MessageBox.Show("Erro ao finalizar pedido:\n\n" + ex.Message,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -843,6 +877,214 @@ namespace PDV_CAIXA {
             CaixaCarregar();
         }
 
+        // ════════════════════════════════════════════════════════════
+        // ── RELATÓRIOS ───────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+
+        private void BtnMenuRelatorios_Click(object sender, RoutedEventArgs e) {
+            MostrarPagina(pageRelatorios);
+            ResetarMenus();
+            btnMenuRelatorios.Style = (Style)FindResource("MenuButtonActive");
+            RelCarregarLista();
+        }
+
+        private void RelCarregarLista() {
+            var pasta = RelatorioService.PastaRelatorios();
+            System.IO.Directory.CreateDirectory(pasta); // garante que a pasta sempre existe
+
+            var arquivosExistentes = System.IO.Directory.GetFiles(pasta, "*.pdf");
+            if (arquivosExistentes.Length == 0) {
+                relDgArquivos.ItemsSource = null;
+                relPanelVazio.Visibility  = Visibility.Visible;
+                relDgArquivos.Visibility  = Visibility.Collapsed;
+                return;
+            }
+
+            var arquivos = new System.IO.DirectoryInfo(pasta)
+                .GetFiles("*.pdf")
+                .OrderByDescending(f => f.LastWriteTime)
+                .Select(f => new RelatorioArquivoViewModel {
+                    Nome            = f.Name,
+                    Tamanho         = f.Length < 1024 ? $"{f.Length} B"
+                                    : f.Length < 1024 * 1024 ? $"{f.Length / 1024} KB"
+                                    : $"{f.Length / (1024 * 1024)} MB",
+                    DataTexto       = f.LastWriteTime.ToString("dd/MM/yyyy HH:mm"),
+                    CaminhoCompleto = f.FullName
+                })
+                .ToList();
+
+            if (arquivos.Count == 0) {
+                relDgArquivos.ItemsSource = null;
+                relPanelVazio.Visibility  = Visibility.Visible;
+                relDgArquivos.Visibility  = Visibility.Collapsed;
+            } else {
+                relDgArquivos.ItemsSource = arquivos;
+                relDgArquivos.Visibility  = Visibility.Visible;
+                relPanelVazio.Visibility  = Visibility.Collapsed;
+            }
+        }
+
+        private void BtnRelAtualizar_Click(object sender, RoutedEventArgs e)
+            => RelCarregarLista();
+
+        private void RelDgArquivos_DoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            if (relDgArquivos.SelectedItem is RelatorioArquivoViewModel item)
+                AbrirRelatorio(item.CaminhoCompleto);
+        }
+
+        private void BtnRelAbrir_Click(object sender, RoutedEventArgs e) {
+            if (sender is Button btn && btn.Tag is string caminho)
+                AbrirRelatorio(caminho);
+        }
+
+        private void BtnRelExcluir_Click(object sender, RoutedEventArgs e) {
+            if (sender is not Button btn || btn.Tag is not string caminho) return;
+            var nome = System.IO.Path.GetFileName(caminho);
+            var resp = MessageBox.Show($"Excluir o arquivo:\n{nome}?",
+                "Confirmar exclusão", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (resp != MessageBoxResult.Yes) return;
+            try {
+                System.IO.File.Delete(caminho);
+                RelCarregarLista();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao excluir:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private static void AbrirRelatorio(string caminho) {
+            if (!System.IO.File.Exists(caminho)) {
+                MessageBox.Show("Arquivo não encontrado:\n" + caminho,
+                    "Arquivo não encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            var titulo = System.IO.Path.GetFileNameWithoutExtension(caminho);
+            var preview = new Views.RelatorioPreviewWindow(titulo, caminho);
+            preview.Show();
+        }
+
+        private void RelCmbTipo_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (relCmbTipo.SelectedItem != null) {
+                relCmbPlaceholder.Visibility     = Visibility.Collapsed;
+                btnRelGerarSelecionado.IsEnabled = true;
+            } else {
+                relCmbPlaceholder.Visibility     = Visibility.Visible;
+                btnRelGerarSelecionado.IsEnabled = false;
+            }
+        }
+
+        private void BtnRelGerarSelecionado_Click(object sender, RoutedEventArgs e) {
+            if (relCmbTipo.SelectedItem is not System.Windows.Controls.ComboBoxItem item) return;
+            var tag = item.Tag as string;
+            try {
+                if (tag == "usuarios") {
+                    var usuarios = new Repositories.UsuarioRepository().ObterTodos().ToList();
+                    _relatorioService.GerarRelatorioUsuarios(usuarios);
+                } else if (tag == "produtos") {
+                    var produtos = new Repositories.ProdutoRepository().ObterTodos().ToList();
+                    _relatorioService.GerarRelatorioProdutos(produtos);
+                }
+                RelCarregarLista();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao gerar relatório:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ── FERRAMENTAS ──────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+
+        private void BtnMenuFerramentas_Click(object sender, RoutedEventArgs e) {
+            MostrarPagina(pageFerramentas);
+            ResetarMenus();
+            btnMenuFerramentas.Style = (Style)FindResource("MenuButtonActive");
+            FerrCarregarInfo();
+        }
+
+        private void FerrCarregarInfo() {
+            // Parse connection string para exibir os campos
+            try {
+                var cs = Config.AppConfig.ConnectionString;
+                ferrTxtHost.Text      = ExtrairParamConn(cs, "Host")     ?? "—";
+                ferrTxtPorta.Text     = ExtrairParamConn(cs, "Port")     ?? "5432";
+                ferrTxtDatabase.Text  = ExtrairParamConn(cs, "Database") ?? "—";
+                ferrTxtUsuarioDB.Text = ExtrairParamConn(cs, "Username") ?? "—";
+            } catch {
+                ferrTxtHost.Text = ferrTxtPorta.Text = ferrTxtDatabase.Text = ferrTxtUsuarioDB.Text = "—";
+            }
+
+            var pasta = RelatorioService.PastaRelatorios();
+            ferrTxtPastaRel.Text = pasta;
+            ferrTxtExe.Text      = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Reset status
+            ferrStatusIndicador.Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#44446A"));
+            ferrTxtStatus.Text      = "Aguardando teste...";
+            ferrTxtStatus.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#44446A"));
+        }
+
+        private static string? ExtrairParamConn(string cs, string chave) {
+            foreach (var parte in cs.Split(';')) {
+                var kv = parte.Trim().Split('=', 2);
+                if (kv.Length == 2 && kv[0].Trim().Equals(chave, StringComparison.OrdinalIgnoreCase))
+                    return kv[1].Trim();
+            }
+            return null;
+        }
+
+        private async void BtnFerrTestarConexao_Click(object sender, RoutedEventArgs e) {
+            ferrTxtStatus.Text = "Testando...";
+            ferrStatusIndicador.Background = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#888800"));
+            ferrTxtStatus.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#CCCC00"));
+
+            var (ok, msg) = await Task.Run(() => {
+                try {
+                    using var conn = new Data.Conexao().CriarConexao();
+                    conn.Open();
+                    return (true, $"Conectado com sucesso! ({DateTime.Now:HH:mm:ss})");
+                } catch (Exception ex) {
+                    return (false, ex.Message);
+                }
+            });
+
+            if (ok) {
+                ferrStatusIndicador.Background = new System.Windows.Media.SolidColorBrush(
+                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00AA44"));
+                ferrTxtStatus.Text      = msg;
+                ferrTxtStatus.Foreground = new System.Windows.Media.SolidColorBrush(
+                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#50FA7B"));
+            } else {
+                ferrStatusIndicador.Background = new System.Windows.Media.SolidColorBrush(
+                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#AA2222"));
+                ferrTxtStatus.Text      = $"Falha: {msg}";
+                ferrTxtStatus.Foreground = new System.Windows.Media.SolidColorBrush(
+                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF5555"));
+            }
+        }
+
+        private void BtnFerrAbrirPasta_Click(object sender, RoutedEventArgs e) {
+            var pasta = RelatorioService.PastaRelatorios();
+            System.IO.Directory.CreateDirectory(pasta);
+            System.Diagnostics.Process.Start("explorer.exe", pasta);
+        }
+
+        private void FerrTxtPastaRel_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            BtnFerrAbrirPasta_Click(sender, new RoutedEventArgs());
+        }
+
+        private void BtnFerrTesteImpressao_Click(object sender, RoutedEventArgs e) {
+            try {
+                _relatorioService.GerarTesteImpressao();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro:\n\n" + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void CaixaCarregar() {
             try {
                 _caixaAtivo = _caixaService.ObterCaixaAberto();
@@ -946,11 +1188,23 @@ namespace PDV_CAIXA {
 
                 if (janela.ShowDialog() != true) return;
 
-                _caixaService.FecharCaixa(_caixaAtivo.Id, janela.SaldoRealInformado,
+                var movsFechamento = _caixaService.ListarMovimentacoes(_caixaAtivo.Id).ToList();
+                var formasFechamento = _caixaService.ObterTotaisPorForma(_caixaAtivo.Id);
+                var resultado = _caixaService.FecharCaixa(_caixaAtivo.Id, janela.SaldoRealInformado,
                     usuarioFechamentoId: _usuarioLogado.Id);
+
+                var caixaFechada = _caixaAtivo;
+                var operador     = _usuarioLogado.Nome;
                 _caixaAtivo = null;
                 caixaPanelAberto.Visibility  = Visibility.Collapsed;
                 caixaPanelFechado.Visibility = Visibility.Visible;
+
+                var printFechamento = MessageBox.Show(
+                    "Caixa fechado com sucesso!\n\nDeseja imprimir o relatório de fechamento?",
+                    "Fechamento de Caixa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (printFechamento == MessageBoxResult.Yes)
+                    _relatorioService.ImprimirFechamentoCaixa(caixaFechada, operador, resultado, movsFechamento);
             } catch (Exception ex) {
                 MessageBox.Show("Erro ao fechar caixa:\n\n" + ex.Message,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);

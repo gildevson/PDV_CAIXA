@@ -11,6 +11,9 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Dapper" Version="2.1.72" />
+    <PackageReference Include="FastReport.OpenSource" Version="2026.1.8" />
+    <PackageReference Include="FastReport.OpenSource.Export.PdfSimple" Version="2026.1.8" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3856.49" />
     <PackageReference Include="Npgsql" Version="10.0.2" />
   </ItemGroup>
 

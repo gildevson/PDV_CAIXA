@@ -14,6 +14,8 @@ Sistema de **Ponto de Venda (PDV)** desktop desenvolvido em **C# com WPF (.NET 8
 | Dapper | 2.1.72 | ORM leve para consultas SQL |
 | Npgsql | 10.0.2 | Driver PostgreSQL para .NET |
 | BCrypt.Net-Next | 4.1.0 | Hash de senhas |
+| FastReport.OpenSource | 2026.1.8 | Geração de relatórios e cupons (PDF) |
+| FastReport.OpenSource.Export.PdfSimple | 2026.1.8 | Exportação dos relatórios para PDF |
 
 ---
 
@@ -49,6 +51,12 @@ Sistema de **Ponto de Venda (PDV)** desktop desenvolvido em **C# com WPF (.NET 8
 - Atribuição de perfil (admin / usuario)
 - Alteração de senha independente do cadastro
 - Proteção contra auto-exclusão do usuário logado
+
+### Relatórios (FastReport)
+- **Cupom de Venda** gerado automaticamente ao finalizar uma venda
+- **Relatório de Fechamento de Caixa** gerado ao fechar o caixa
+- Exportação automática para **PDF** — abre no visualizador padrão do Windows (Edge, Adobe, etc.)
+- Impressão disponível diretamente pelo visualizador de PDF
 
 ---
 
@@ -220,7 +228,14 @@ LoginWindow
             │
             ├── Produtos (admin) → CadastroProdutoWindow
             │
-            └── Usuários (admin) → CadastroUsuarioWindow
+            ├── Usuários (admin) → CadastroUsuarioWindow
+            │
+            └── Caixa
+                    ├── Abrir Caixa → AbrirCaixaWindow
+                    ├── Movimentações (Entrada / Saída / Sangria / Suprimento)
+                    ├── Histórico de sessões → HistoricoCaixaWindow
+                    └── Fechar Caixa → FechamentoCaixaWindow
+                                          └── Confirmar → gera Relatório PDF
 ```
 
 ---
@@ -230,8 +245,12 @@ LoginWindow
 | Tela | Descrição |
 |---|---|
 | `LoginWindow` | Autenticação de usuário |
-| `MainWindow` | Dashboard com abas PDV, Histórico e Pesquisa |
+| `MainWindow` | Dashboard com abas PDV, Histórico, Pesquisa, Caixa, Produtos e Usuários |
 | `PagamentoWindow` | Seleção de forma de pagamento e cálculo de troco |
+| `AbrirCaixaWindow` | Abertura de sessão de caixa com saldo inicial |
+| `FechamentoCaixaWindow` | Fechamento de caixa com conferência física e geração de relatório PDF |
+| `HistoricoCaixaWindow` | Histórico de sessões de abertura e fechamento |
+| `MovimentacaoWindow` | Registro manual de entrada, saída, sangria ou suprimento |
 | `CadastroProdutoWindow` | Formulário de criação/edição de produto com foto |
 | `CadastroUsuarioWindow` | Formulário de criação/edição de usuário com foto |
 
@@ -251,9 +270,57 @@ LoginWindow
 ## Pacotes NuGet
 
 ```xml
-<PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
-<PackageReference Include="Dapper"          Version="2.1.72" />
-<PackageReference Include="Npgsql"          Version="10.0.2" />
+<PackageReference Include="BCrypt.Net-Next"                       Version="4.1.0"    />
+<PackageReference Include="Dapper"                                Version="2.1.72"   />
+<PackageReference Include="Npgsql"                                Version="10.0.2"   />
+<PackageReference Include="FastReport.OpenSource"                 Version="2026.1.8" />
+<PackageReference Include="FastReport.OpenSource.Export.PdfSimple" Version="2026.1.8" />
+```
+
+> Os pacotes FastReport são instalados automaticamente via NuGet — **não é necessário baixar nada separadamente**.
+
+---
+
+## Relatórios
+
+O sistema utiliza **FastReport.OpenSource 2026.1.8** para geração de relatórios em PDF.
+
+### Cupom de Venda (80 mm — bobina térmica)
+
+Gerado automaticamente ao finalizar uma venda. Contém:
+
+- Número e data do pedido
+- Nome do operador
+- Lista de itens com quantidade e valor
+- Formas de pagamento utilizadas
+- Troco (quando aplicável)
+- Total da venda
+
+**Como gerar:** Finalize uma venda no PDV → clique **Sim** na pergunta "Deseja imprimir o cupom?"
+
+### Relatório de Fechamento de Caixa (A4)
+
+Gerado ao encerrar uma sessão de caixa. Contém:
+
+- Operador, data/hora de abertura e fechamento, duração da sessão
+- Resumo financeiro por forma de pagamento (Dinheiro, Crédito, Débito, PIX)
+- Total geral da sessão
+- Conferência de caixa: saldo esperado × saldo contado × diferença
+- Tabela completa de todas as movimentações da sessão
+
+**Como gerar:** Feche o caixa → clique **Sim** na pergunta "Deseja imprimir o relatório de fechamento?"
+
+### Funcionamento técnico
+
+```
+Services/RelatorioService.cs
+    ├── ImprimirCupomVenda()        → relatório 80mm
+    └── ImprimirFechamentoCaixa()   → relatório A4
+            │
+            └── ExportarPdf()
+                    ├── report.Prepare()              (FastReport processa os dados)
+                    ├── report.Export(PDFSimpleExport) (gera o arquivo PDF em /temp)
+                    └── Process.Start()               (abre no visualizador padrão do Windows)
 ```
 
 ---

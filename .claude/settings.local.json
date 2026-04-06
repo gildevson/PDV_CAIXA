@@ -18,7 +18,14 @@
       "Bash(timeout /t 2)",
       "Bash(\"C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\PDV_CAIXA\\\\Database\\\\Scripts\\\\add_numero_pedidos.sql\")",
       "Bash(cmd.exe /c \"taskkill /F /IM PDV_CAIXA.exe\" 2>&1)",
-      "Bash(ls -la *.cs)"
+      "Bash(ls -la *.cs)",
+      "Bash(grep -r \"DataGrid\\\\|ListView\\\\|ItemsSource\" /c/CSharp/ProjetosEstudos/PDV_CAIXA/PDV_CAIXA --include=*.xaml --include=*.cs)",
+      "Bash(grep:*)",
+      "Bash(find PDV_CAIXA -type f -name *Report* -o -name *Report*.cs -o -name *Print* -o -name *Print*.cs)",
+      "Bash(dotnet package:*)",
+      "Bash(echo.)",
+      "Bash(\"C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\Relatorios\\\\.gitkeep\")",
+      "Bash(dotnet remove:*)"
     ]
   }
 }
