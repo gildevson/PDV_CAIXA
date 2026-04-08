@@ -2,7 +2,6 @@
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2008/01/reportdefinition"
         xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
 
-  <!-- ── DataSource ───────────────────────────────────────────── -->
   <DataSources>
     <DataSource Name="DataSource1">
       <ConnectionProperties>
@@ -13,7 +12,6 @@
     </DataSource>
   </DataSources>
 
-  <!-- ── DataSet ──────────────────────────────────────────────── -->
   <DataSets>
     <DataSet Name="DataSetProdutos">
       <Query>
@@ -31,7 +29,6 @@
     </DataSet>
   </DataSets>
 
-  <!-- ── Parâmetros ───────────────────────────────────────────── -->
   <ReportParameters>
     <ReportParameter Name="DataGeracao">
       <DataType>String</DataType>
@@ -45,7 +42,6 @@
     </ReportParameter>
   </ReportParameters>
 
-  <!-- ── Corpo ────────────────────────────────────────────────── -->
   <Body>
     <ReportItems>
 
@@ -74,7 +70,7 @@
         <Style><Border><Style>None</Style></Border></Style>
       </Textbox>
 
-      <!-- Subtítulo / data geração -->
+      <!-- Subtítulo -->
       <Textbox Name="txtSubtitulo">
         <Paragraphs>
           <Paragraph>
@@ -98,7 +94,7 @@
         <Style><Border><Style>None</Style></Border></Style>
       </Textbox>
 
-      <!-- Tabela de produtos -->
+      <!-- Tabela -->
       <Tablix Name="tblProdutos">
         <TablixBody>
           <TablixColumns>
@@ -126,12 +122,10 @@
                       <Style><TextAlign>Left</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#0A0A18</Color><Style>Solid</Style><Width>1pt</Width></Border>
                       <BackgroundColor>#1A1A2E</BackgroundColor>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingLeft>4pt</PaddingLeft>
-                      <BorderColor><Default>#0A0A18</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>1pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -146,12 +140,10 @@
                       <Style><TextAlign>Left</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#0A0A18</Color><Style>Solid</Style><Width>1pt</Width></Border>
                       <BackgroundColor>#1A1A2E</BackgroundColor>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingLeft>4pt</PaddingLeft>
-                      <BorderColor><Default>#0A0A18</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>1pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -166,12 +158,10 @@
                       <Style><TextAlign>Right</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#0A0A18</Color><Style>Solid</Style><Width>1pt</Width></Border>
                       <BackgroundColor>#1A1A2E</BackgroundColor>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingRight>4pt</PaddingRight>
-                      <BorderColor><Default>#0A0A18</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>1pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -186,12 +176,10 @@
                       <Style><TextAlign>Right</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#0A0A18</Color><Style>Solid</Style><Width>1pt</Width></Border>
                       <BackgroundColor>#1A1A2E</BackgroundColor>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingRight>4pt</PaddingRight>
-                      <BorderColor><Default>#0A0A18</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>1pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -206,12 +194,10 @@
                       <Style><TextAlign>Right</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#0A0A18</Color><Style>Solid</Style><Width>1pt</Width></Border>
                       <BackgroundColor>#1A1A2E</BackgroundColor>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingRight>4pt</PaddingRight>
-                      <BorderColor><Default>#0A0A18</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>1pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -226,11 +212,9 @@
                       <Style><TextAlign>Center</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#0A0A18</Color><Style>Solid</Style><Width>1pt</Width></Border>
                       <BackgroundColor>#1A1A2E</BackgroundColor>
                       <VerticalAlign>Middle</VerticalAlign>
-                      <BorderColor><Default>#0A0A18</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>1pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -238,7 +222,7 @@
               </TablixCells>
             </TablixRow>
 
-            <!-- Linha de dados -->
+            <!-- Dados -->
             <TablixRow>
               <Height>0.6cm</Height>
               <TablixCells>
@@ -254,11 +238,9 @@
                       <Style><TextAlign>Left</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#CCCCDD</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingLeft>4pt</PaddingLeft>
-                      <BorderColor><Default>#CCCCDD</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>0.5pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -273,11 +255,9 @@
                       <Style><TextAlign>Left</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#CCCCDD</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingLeft>4pt</PaddingLeft>
-                      <BorderColor><Default>#CCCCDD</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>0.5pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -292,11 +272,9 @@
                       <Style><TextAlign>Right</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#CCCCDD</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingRight>4pt</PaddingRight>
-                      <BorderColor><Default>#CCCCDD</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>0.5pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -311,11 +289,9 @@
                       <Style><TextAlign>Right</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#CCCCDD</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingRight>4pt</PaddingRight>
-                      <BorderColor><Default>#CCCCDD</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>0.5pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -330,11 +306,9 @@
                       <Style><TextAlign>Right</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#CCCCDD</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
                       <VerticalAlign>Middle</VerticalAlign>
                       <PaddingRight>4pt</PaddingRight>
-                      <BorderColor><Default>#CCCCDD</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>0.5pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -349,10 +323,8 @@
                       <Style><TextAlign>Center</TextAlign></Style>
                     </Paragraph></Paragraphs>
                     <Style>
+                      <Border><Color>#CCCCDD</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
                       <VerticalAlign>Middle</VerticalAlign>
-                      <BorderColor><Default>#CCCCDD</Default></BorderColor>
-                      <BorderStyle><Default>Solid</Default></BorderStyle>
-                      <BorderWidth><Default>0.5pt</Default></BorderWidth>
                     </Style>
                   </Textbox>
                 </CellContents></TablixCell>
@@ -365,12 +337,8 @@
 
         <TablixColumnHierarchy>
           <TablixMembers>
-            <TablixMember/>
-            <TablixMember/>
-            <TablixMember/>
-            <TablixMember/>
-            <TablixMember/>
-            <TablixMember/>
+            <TablixMember/><TablixMember/><TablixMember/>
+            <TablixMember/><TablixMember/><TablixMember/>
           </TablixMembers>
         </TablixColumnHierarchy>
 
@@ -399,7 +367,6 @@
     <Style/>
   </Body>
 
-  <!-- ── Cabeçalho de página ──────────────────────────────────── -->
   <PageHeader>
     <Height>0.4cm</Height>
     <PrintOnFirstPage>false</PrintOnFirstPage>
@@ -419,7 +386,6 @@
     </ReportItems>
   </PageHeader>
 
-  <!-- ── Rodapé de página ─────────────────────────────────────── -->
   <PageFooter>
     <Height>0.6cm</Height>
     <PrintOnFirstPage>true</PrintOnFirstPage>
@@ -450,7 +416,6 @@
     </ReportItems>
   </PageFooter>
 
-  <!-- ── Página A4 ─────────────────────────────────────────────── -->
   <Width>17cm</Width>
   <Page>
     <PageHeight>29.7cm</PageHeight>
