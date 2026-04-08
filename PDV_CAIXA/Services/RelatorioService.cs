@@ -396,70 +396,34 @@ public class RelatorioService
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // RELATÓRIO DE USUÁRIOS CADASTRADOS — A4
+    // RELATÓRIO DE USUÁRIOS CADASTRADOS — A4 via RDLC
     // ═══════════════════════════════════════════════════════════════
     public void GerarRelatorioUsuarios(IEnumerable<Usuario> usuarios)
     {
         var lista = usuarios.ToList();
 
-        var report = new Report();
-        var page   = new ReportPage();
-        report.Pages.Add(page);
-
-        page.PaperWidth   = 210;
-        page.PaperHeight  = 297;
-        page.LeftMargin   = 15;
-        page.RightMargin  = 15;
-        page.TopMargin    = 15;
-        page.BottomMargin = 15;
-
-        float w   = MM(page.PaperWidth  - page.LeftMargin - page.RightMargin);
-        float cNome  = w * 0.55f;
-        float cPerfil = w * 0.30f;
-        float cStatus = w * 0.15f;
-
-        // ── Título ────────────────────────────────────────────────
-        var title = new ReportTitleBand();
-        float ty = MM(4);
-        Txt(title, "RELATÓRIO DE USUÁRIOS CADASTRADOS", 0, ty, w, MM(10), 16, FontStyle.Bold, HorzAlign.Center);
-        ty += MM(12);
-        Txt(title, $"Gerado em {DateTime.Now:dd/MM/yyyy} às {DateTime.Now:HH:mm}  •  Total: {lista.Count} usuário(s)",
-            0, ty, w, MM(6), 9, FontStyle.Regular, HorzAlign.Center);
-        ty += MM(8);
-        Linha(title, 0, ty, w); ty += MM(2);
-        // Cabeçalho da tabela
-        Txt(title, "NOME",   0,              ty, cNome,   MM(7), 9, FontStyle.Bold, HorzAlign.Left);
-        Txt(title, "PERFIL", cNome,          ty, cPerfil, MM(7), 9, FontStyle.Bold, HorzAlign.Left);
-        Txt(title, "TOTAL",  cNome + cPerfil, ty, cStatus, MM(7), 9, FontStyle.Bold, HorzAlign.Center);
-        ty += MM(8);
-        Linha(title, 0, ty, w); ty += MM(2);
-        title.Height = ty;
-        page.ReportTitle = title;
-
-        // ── Dados via DataBand ────────────────────────────────────
-        var ds = new DataSet();
-        var dt = new DataTable("Usuarios");
+        var dt = new System.Data.DataTable();
         dt.Columns.Add("Nome");
         dt.Columns.Add("Perfil");
         foreach (var u in lista)
             dt.Rows.Add(u.Nome, u.Perfil == "admin" ? "Administrador" : "Usuário");
-        ds.Tables.Add(dt);
-        report.RegisterData(ds);
-        report.GetDataSource("Usuarios").Enabled = true;
 
-        var band = new DataBand { Height = MM(8), DataSource = report.GetDataSource("Usuarios") };
-        Txt(band, "[Usuarios.Nome]",   0,              0, cNome,   MM(7), 10, FontStyle.Regular, HorzAlign.Left);
-        Txt(band, "[Usuarios.Perfil]", cNome,          0, cPerfil, MM(7), 10, FontStyle.Regular, HorzAlign.Left);
-        page.Bands.Add(band);
+        var parametros = new Dictionary<string, string>
+        {
+            ["DataGeracao"]   = $"Gerado em {DateTime.Now:dd/MM/yyyy} às {DateTime.Now:HH:mm}",
+            ["TotalUsuarios"] = lista.Count.ToString()
+        };
 
-        // ── Rodapé ────────────────────────────────────────────────
-        var footer = new PageFooterBand { Height = MM(8) };
-        Linha(footer, 0, 0, w);
-        Txt(footer, $"PDV Caixa — Relatório de Usuários  •  {DateTime.Now:dd/MM/yyyy HH:mm}",
-            0, MM(2), w, MM(5), 8, FontStyle.Regular, HorzAlign.Center);
-        page.PageFooter = footer;
+        var rdlcService = new RdlcRelatorioService();
+        var pdfBytes = rdlcService.GerarPdfBytes("RelatorioUsuarios.rdlc", "DataSetUsuarios", dt, parametros);
 
-        ExportarPdf(report, "RelatorioUsuarios", "Usuários Cadastrados");
+        var pasta = PastaRelatorios();
+        Directory.CreateDirectory(pasta);
+        var caminho = Path.Combine(pasta, $"RelatorioUsuarios_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        File.WriteAllBytes(caminho, pdfBytes);
+
+        var preview = new PDV_CAIXA.Views.RelatorioPreviewWindow("Usuários Cadastrados", caminho);
+        preview.Show();
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -469,8 +433,7 @@ public class RelatorioService
     {
         var lista = produtos.ToList();
 
-        // ── Monta DataTable compatível com o DataSet do RDLC ──────
-        var dt = new DataTable();
+        var dt = new System.Data.DataTable();
         dt.Columns.Add("Nome");
         dt.Columns.Add("CodigoBarras");
         dt.Columns.Add("Preco");
@@ -482,7 +445,7 @@ public class RelatorioService
                 p.Nome,
                 p.CodigoBarras ?? "—",
                 p.Preco.ToString("C2", PtBR),
-                p.Desconto > 0 ? p.Desconto.ToString("C2", PtBR) : "—",
+                p.Desconto > 0 ? $"{p.Desconto:F0}%" : "—",
                 p.Estoque.ToString(),
                 p.Ativo ? "Sim" : "Não");
 
@@ -492,11 +455,9 @@ public class RelatorioService
             ["TotalProdutos"] = lista.Count.ToString()
         };
 
-        // ── Renderiza via RDLC ────────────────────────────────────
         var rdlcService = new RdlcRelatorioService();
         var pdfBytes = rdlcService.GerarPdfBytes("RelatorioProdutos.rdlc", "DataSetProdutos", dt, parametros);
 
-        // ── Salva na pasta de relatórios e abre o preview ─────────
         var pasta = PastaRelatorios();
         Directory.CreateDirectory(pasta);
         var caminho = Path.Combine(pasta, $"RelatorioProdutos_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");

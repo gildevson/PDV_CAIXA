@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspNetCore.Reporting" Version="2.1.0" />
+    <PackageReference Include="ReportViewerCore.NETCore" Version="15.1.33" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="FastReport.OpenSource" Version="2026.1.8" />
@@ -34,6 +34,14 @@
     <Content Include="Relatorios\*.rdlc">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Relatorios\Report1.rdlc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Relatorios\Report1.rdlc" />
   </ItemGroup>
 
 

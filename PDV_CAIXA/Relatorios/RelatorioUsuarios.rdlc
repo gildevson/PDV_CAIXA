@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource1">
+      <ConnectionProperties>
+        <DataProvider>System.Data.DataSet</DataProvider>
+        <ConnectString>/* Local Connection */</ConnectString>
+      </ConnectionProperties>
+      <rd:DataSourceID>b2c3d4e5-0000-0000-0000-000000000002</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="DataSetUsuarios">
+      <Query>
+        <DataSourceName>DataSource1</DataSourceName>
+        <CommandText>/* Local Query */</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Nome">
+          <DataField>Nome</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Perfil">
+          <DataField>Perfil</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+
+          <!-- Título -->
+          <Textbox Name="txtTitulo">
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>RELATÓRIO DE USUÁRIOS CADASTRADOS</Value>
+                    <Style>
+                      <FontSize>16pt</FontSize>
+                      <FontWeight>Bold</FontWeight>
+                      <Color>#1a1a2e</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style><TextAlign>Center</TextAlign></Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>0.5cm</Top>
+            <Left>0cm</Left>
+            <Height>1cm</Height>
+            <Width>17cm</Width>
+            <Style><Border><Style>None</Style></Border></Style>
+          </Textbox>
+
+          <!-- Subtítulo -->
+          <Textbox Name="txtSubtitulo">
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Parameters!DataGeracao.Value &amp; "   •   Total: " &amp; Parameters!TotalUsuarios.Value &amp; " usuário(s)"</Value>
+                    <Style>
+                      <FontSize>9pt</FontSize>
+                      <Color>#44446a</Color>
+                    </Style>
+                  </TextRun>
+                </TextRuns>
+                <Style><TextAlign>Center</TextAlign></Style>
+              </Paragraph>
+            </Paragraphs>
+            <Top>1.7cm</Top>
+            <Left>0cm</Left>
+            <Height>0.6cm</Height>
+            <Width>17cm</Width>
+            <ZIndex>1</ZIndex>
+            <Style><Border><Style>None</Style></Border></Style>
+          </Textbox>
+
+          <!-- Tabela -->
+          <Tablix Name="tblUsuarios">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn><Width>11.5cm</Width></TablixColumn>
+                <TablixColumn><Width>5.5cm</Width></TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+
+                <!-- Cabeçalho -->
+                <TablixRow>
+                  <Height>0.7cm</Height>
+                  <TablixCells>
+
+                    <TablixCell><CellContents>
+                      <Textbox Name="hNome">
+                        <Paragraphs><Paragraph>
+                          <TextRuns><TextRun>
+                            <Value>NOME</Value>
+                            <Style><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style>
+                          </TextRun></TextRuns>
+                          <Style><TextAlign>Left</TextAlign></Style>
+                        </Paragraph></Paragraphs>
+                        <Style>
+                          <Border><Color>#0a0a18</Color><Style>Solid</Style></Border>
+                          <BackgroundColor>#1a1a2e</BackgroundColor>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>4pt</PaddingLeft>
+                        </Style>
+                      </Textbox>
+                    </CellContents></TablixCell>
+
+                    <TablixCell><CellContents>
+                      <Textbox Name="hPerfil">
+                        <Paragraphs><Paragraph>
+                          <TextRuns><TextRun>
+                            <Value>PERFIL</Value>
+                            <Style><FontSize>9pt</FontSize><FontWeight>Bold</FontWeight><Color>White</Color></Style>
+                          </TextRun></TextRuns>
+                          <Style><TextAlign>Left</TextAlign></Style>
+                        </Paragraph></Paragraphs>
+                        <Style>
+                          <Border><Color>#0a0a18</Color><Style>Solid</Style></Border>
+                          <BackgroundColor>#1a1a2e</BackgroundColor>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>4pt</PaddingLeft>
+                        </Style>
+                      </Textbox>
+                    </CellContents></TablixCell>
+
+                  </TablixCells>
+                </TablixRow>
+
+                <!-- Dados -->
+                <TablixRow>
+                  <Height>0.6cm</Height>
+                  <TablixCells>
+
+                    <TablixCell><CellContents>
+                      <Textbox Name="dNome">
+                        <CanGrow>true</CanGrow>
+                        <Paragraphs><Paragraph>
+                          <TextRuns><TextRun>
+                            <Value>=Fields!Nome.Value</Value>
+                            <Style><FontSize>9pt</FontSize></Style>
+                          </TextRun></TextRuns>
+                          <Style><TextAlign>Left</TextAlign></Style>
+                        </Paragraph></Paragraphs>
+                        <Style>
+                          <Border><Color>#ccccdd</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>4pt</PaddingLeft>
+                        </Style>
+                      </Textbox>
+                    </CellContents></TablixCell>
+
+                    <TablixCell><CellContents>
+                      <Textbox Name="dPerfil">
+                        <Paragraphs><Paragraph>
+                          <TextRuns><TextRun>
+                            <Value>=Fields!Perfil.Value</Value>
+                            <Style><FontSize>9pt</FontSize></Style>
+                          </TextRun></TextRuns>
+                          <Style><TextAlign>Left</TextAlign></Style>
+                        </Paragraph></Paragraphs>
+                        <Style>
+                          <Border><Color>#ccccdd</Color><Style>Solid</Style><Width>0.5pt</Width></Border>
+                          <VerticalAlign>Middle</VerticalAlign>
+                          <PaddingLeft>4pt</PaddingLeft>
+                        </Style>
+                      </Textbox>
+                    </CellContents></TablixCell>
+
+                  </TablixCells>
+                </TablixRow>
+
+              </TablixRows>
+            </TablixBody>
+
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember/><TablixMember/>
+              </TablixMembers>
+            </TablixColumnHierarchy>
+
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember>
+                  <KeepWithGroup>After</KeepWithGroup>
+                  <RepeatOnNewPage>true</RepeatOnNewPage>
+                  <KeepTogether>true</KeepTogether>
+                </TablixMember>
+                <TablixMember>
+                  <Group Name="GrupoUsuarios"/>
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+
+            <DataSetName>DataSetUsuarios</DataSetName>
+            <Top>2.6cm</Top>
+            <Left>0cm</Left>
+            <Width>17cm</Width>
+            <Style><Border><Style>None</Style></Border></Style>
+          </Tablix>
+
+        </ReportItems>
+        <Height>29cm</Height>
+        <Style/>
+      </Body>
+      <Page>
+        <PageHeight>29.7cm</PageHeight>
+        <PageWidth>21cm</PageWidth>
+        <LeftMargin>2cm</LeftMargin>
+        <RightMargin>2cm</RightMargin>
+        <TopMargin>1.5cm</TopMargin>
+        <BottomMargin>1.5cm</BottomMargin>
+        <Style/>
+      </Page>
+      <Width>17cm</Width>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="DataGeracao">
+      <DataType>String</DataType>
+      <AllowBlank>true</AllowBlank>
+      <DefaultValue><Values><Value /></Values></DefaultValue>
+      <Prompt>Data de Geração</Prompt>
+    </ReportParameter>
+    <ReportParameter Name="TotalUsuarios">
+      <DataType>String</DataType>
+      <AllowBlank>true</AllowBlank>
+      <DefaultValue><Values><Value>0</Value></Values></DefaultValue>
+      <Prompt>Total de Usuários</Prompt>
+    </ReportParameter>
+  </ReportParameters>
+  <rd:ReportUnitType>Cm</rd:ReportUnitType>
+</Report>
