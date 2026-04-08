@@ -26,7 +26,8 @@
       "Bash(echo.)",
       "Bash(\"C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\Relatorios\\\\.gitkeep\")",
       "Bash(dotnet remove:*)",
-      "Bash(find /c/CSharp/ProjetosEstudos/PDV_CAIXA/PDV_CAIXA -type f -not -path */bin/* -not -path */obj/*)"
+      "Bash(find /c/CSharp/ProjetosEstudos/PDV_CAIXA/PDV_CAIXA -type f -not -path */bin/* -not -path */obj/*)",
+      "Bash(dotnet nuget:*)"
     ]
   }
 }

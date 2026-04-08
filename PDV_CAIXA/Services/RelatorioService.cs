@@ -463,56 +463,14 @@ public class RelatorioService
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // RELATÓRIO DE PRODUTOS CADASTRADOS — A4
+    // RELATÓRIO DE PRODUTOS CADASTRADOS — A4 via RDLC
     // ═══════════════════════════════════════════════════════════════
     public void GerarRelatorioProdutos(IEnumerable<Produto> produtos)
     {
         var lista = produtos.ToList();
 
-        var report = new Report();
-        var page   = new ReportPage();
-        report.Pages.Add(page);
-
-        page.PaperWidth   = 210;
-        page.PaperHeight  = 297;
-        page.LeftMargin   = 15;
-        page.RightMargin  = 15;
-        page.TopMargin    = 15;
-        page.BottomMargin = 15;
-
-        float w      = MM(page.PaperWidth - page.LeftMargin - page.RightMargin);
-        float cNome  = w * 0.38f;
-        float cCod   = w * 0.20f;
-        float cPreco = w * 0.15f;
-        float cDesc  = w * 0.12f;
-        float cEst   = w * 0.08f;
-        float cAtivo = w * 0.07f;
-
-        // ── Título ────────────────────────────────────────────────
-        var title = new ReportTitleBand();
-        float ty = MM(4);
-        Txt(title, "RELATÓRIO DE PRODUTOS CADASTRADOS", 0, ty, w, MM(10), 16, FontStyle.Bold, HorzAlign.Center);
-        ty += MM(12);
-        Txt(title, $"Gerado em {DateTime.Now:dd/MM/yyyy} às {DateTime.Now:HH:mm}  •  Total: {lista.Count} produto(s)",
-            0, ty, w, MM(6), 9, FontStyle.Regular, HorzAlign.Center);
-        ty += MM(8);
-        Linha(title, 0, ty, w); ty += MM(2);
-        // Cabeçalho da tabela
-        float cx = 0;
-        Txt(title, "NOME",      cx, ty, cNome,  MM(7), 9, FontStyle.Bold, HorzAlign.Left);  cx += cNome;
-        Txt(title, "CÓD.BARRAS",cx, ty, cCod,   MM(7), 9, FontStyle.Bold, HorzAlign.Left);  cx += cCod;
-        Txt(title, "PREÇO",     cx, ty, cPreco, MM(7), 9, FontStyle.Bold, HorzAlign.Right); cx += cPreco;
-        Txt(title, "DESCONTO",  cx, ty, cDesc,  MM(7), 9, FontStyle.Bold, HorzAlign.Right); cx += cDesc;
-        Txt(title, "ESTOQUE",   cx, ty, cEst,   MM(7), 9, FontStyle.Bold, HorzAlign.Right); cx += cEst;
-        Txt(title, "ATIVO",     cx, ty, cAtivo, MM(7), 9, FontStyle.Bold, HorzAlign.Center);
-        ty += MM(8);
-        Linha(title, 0, ty, w); ty += MM(2);
-        title.Height = ty;
-        page.ReportTitle = title;
-
-        // ── Dados via DataBand ────────────────────────────────────
-        var ds = new DataSet();
-        var dt = new DataTable("Produtos");
+        // ── Monta DataTable compatível com o DataSet do RDLC ──────
+        var dt = new DataTable();
         dt.Columns.Add("Nome");
         dt.Columns.Add("CodigoBarras");
         dt.Columns.Add("Preco");
@@ -527,28 +485,25 @@ public class RelatorioService
                 p.Desconto > 0 ? p.Desconto.ToString("C2", PtBR) : "—",
                 p.Estoque.ToString(),
                 p.Ativo ? "Sim" : "Não");
-        ds.Tables.Add(dt);
-        report.RegisterData(ds);
-        report.GetDataSource("Produtos").Enabled = true;
 
-        var band = new DataBand { Height = MM(8), DataSource = report.GetDataSource("Produtos") };
-        cx = 0;
-        Txt(band, "[Produtos.Nome]",        cx, 0, cNome,  MM(7), 9, FontStyle.Regular, HorzAlign.Left);  cx += cNome;
-        Txt(band, "[Produtos.CodigoBarras]", cx, 0, cCod,   MM(7), 9, FontStyle.Regular, HorzAlign.Left);  cx += cCod;
-        Txt(band, "[Produtos.Preco]",        cx, 0, cPreco, MM(7), 9, FontStyle.Regular, HorzAlign.Right); cx += cPreco;
-        Txt(band, "[Produtos.Desconto]",     cx, 0, cDesc,  MM(7), 9, FontStyle.Regular, HorzAlign.Right); cx += cDesc;
-        Txt(band, "[Produtos.Estoque]",      cx, 0, cEst,   MM(7), 9, FontStyle.Regular, HorzAlign.Right); cx += cEst;
-        Txt(band, "[Produtos.Ativo]",        cx, 0, cAtivo, MM(7), 9, FontStyle.Regular, HorzAlign.Center);
-        page.Bands.Add(band);
+        var parametros = new Dictionary<string, string>
+        {
+            ["DataGeracao"]   = $"Gerado em {DateTime.Now:dd/MM/yyyy} às {DateTime.Now:HH:mm}",
+            ["TotalProdutos"] = lista.Count.ToString()
+        };
 
-        // ── Rodapé ────────────────────────────────────────────────
-        var footer = new PageFooterBand { Height = MM(8) };
-        Linha(footer, 0, 0, w);
-        Txt(footer, $"PDV Caixa — Relatório de Produtos  •  {DateTime.Now:dd/MM/yyyy HH:mm}",
-            0, MM(2), w, MM(5), 8, FontStyle.Regular, HorzAlign.Center);
-        page.PageFooter = footer;
+        // ── Renderiza via RDLC ────────────────────────────────────
+        var rdlcService = new RdlcRelatorioService();
+        var pdfBytes = rdlcService.GerarPdfBytes("RelatorioProdutos.rdlc", "DataSetProdutos", dt, parametros);
 
-        ExportarPdf(report, "RelatorioProdutos", "Produtos Cadastrados");
+        // ── Salva na pasta de relatórios e abre o preview ─────────
+        var pasta = PastaRelatorios();
+        Directory.CreateDirectory(pasta);
+        var caminho = Path.Combine(pasta, $"RelatorioProdutos_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        File.WriteAllBytes(caminho, pdfBytes);
+
+        var preview = new PDV_CAIXA.Views.RelatorioPreviewWindow("Produtos Cadastrados", caminho);
+        preview.Show();
     }
 
     // ═══════════════════════════════════════════════════════════════
