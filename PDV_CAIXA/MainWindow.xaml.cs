@@ -158,8 +158,9 @@ namespace PDV_CAIXA {
             pagePedidos.Visibility   = Visibility.Collapsed;
             pageHistorico.Visibility    = Visibility.Collapsed;
             pageCaixa.Visibility        = Visibility.Collapsed;
-            pageRelatorios.Visibility   = Visibility.Collapsed;
-            pageFerramentas.Visibility  = Visibility.Collapsed;
+            pageRelatorios.Visibility       = Visibility.Collapsed;
+            pageConfigRelatorios.Visibility = Visibility.Collapsed;
+            pageFerramentas.Visibility      = Visibility.Collapsed;
             pagina.Visibility           = Visibility.Visible;
         }
 
@@ -885,7 +886,109 @@ namespace PDV_CAIXA {
             MostrarPagina(pageRelatorios);
             ResetarMenus();
             btnMenuRelatorios.Style = (Style)FindResource("MenuButtonActive");
+            RelCarregarComboBox();
             RelCarregarLista();
+        }
+
+        private void RelCarregarComboBox() {
+            try {
+                var configs = new Repositories.RelatorioConfigRepository().ObterAtivos().ToList();
+                relCmbTipo.ItemsSource       = configs;
+                relCmbTipo.DisplayMemberPath = "Nome";
+                relCmbTipo.SelectedIndex     = -1;
+                relCmbPlaceholder.Visibility     = Visibility.Visible;
+                btnRelGerarSelecionado.IsEnabled = false;
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao carregar relatórios:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RelCmbTipo_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (relCmbTipo.SelectedItem != null) {
+                relCmbPlaceholder.Visibility     = Visibility.Collapsed;
+                btnRelGerarSelecionado.IsEnabled = true;
+            } else {
+                relCmbPlaceholder.Visibility     = Visibility.Visible;
+                btnRelGerarSelecionado.IsEnabled = false;
+            }
+        }
+
+        private void BtnRelGerarSelecionado_Click(object sender, RoutedEventArgs e) {
+            if (relCmbTipo.SelectedItem is not Models.RelatorioConfig config) return;
+            try {
+                switch (config.Tipo) {
+                    case "Usuarios":
+                        var usuarios = new Repositories.UsuarioRepository().ObterTodos().ToList();
+                        _relatorioService.GerarRelatorioUsuarios(usuarios, config.NomeArquivo);
+                        break;
+                    case "Produtos":
+                        var produtos = new Repositories.ProdutoRepository().ObterTodos().ToList();
+                        _relatorioService.GerarRelatorioProdutos(produtos, config.NomeArquivo);
+                        break;
+                    default:
+                        MessageBox.Show($"Tipo '{config.Tipo}' não possui gerador configurado.",
+                            "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                }
+                RelCarregarLista();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao gerar relatório:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ── CONFIG. RELATÓRIOS ───────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+
+        private void BtnMenuConfigRelatorios_Click(object sender, RoutedEventArgs e) {
+            var resp = MessageBox.Show(
+                "Tem certeza que deseja acessar a configuração de relatórios?\n\nAlterações aqui afetam os relatórios disponíveis para impressão.",
+                "Configuração de Relatórios",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (resp != MessageBoxResult.Yes) return;
+
+            MostrarPagina(pageConfigRelatorios);
+            ResetarMenus();
+            btnMenuConfigRelatorios.Style = (Style)FindResource("MenuButtonActive");
+            CfgRelCarregar();
+        }
+
+        private void CfgRelCarregar() {
+            try {
+                cfgRelDgConfigs.ItemsSource = new Repositories.RelatorioConfigRepository().ObterTodos().ToList();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao carregar relatórios:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnConfigRelNovo_Click(object sender, RoutedEventArgs e) {
+            var win = new Views.CadastroRelatorioWindow { Owner = this };
+            if (win.ShowDialog() == true) CfgRelCarregar();
+        }
+
+        private void BtnConfigRelEditar_Click(object sender, RoutedEventArgs e) {
+            if (sender is not Button btn || btn.Tag is not Models.RelatorioConfig config) return;
+            var win = new Views.CadastroRelatorioWindow(config) { Owner = this };
+            if (win.ShowDialog() == true) CfgRelCarregar();
+        }
+
+        private void BtnConfigRelExcluir_Click(object sender, RoutedEventArgs e) {
+            if (sender is not Button btn || btn.Tag is not Models.RelatorioConfig config) return;
+            var resp = MessageBox.Show($"Excluir o relatório:\n{config.Nome}?",
+                "Confirmar exclusão", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (resp != MessageBoxResult.Yes) return;
+            try {
+                new Repositories.RelatorioConfigRepository().Excluir(config.Id);
+                CfgRelCarregar();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao excluir:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void RelCarregarLista() {
@@ -963,34 +1066,6 @@ namespace PDV_CAIXA {
             preview.Show();
         }
 
-        private void RelCmbTipo_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            if (relCmbTipo.SelectedItem != null) {
-                relCmbPlaceholder.Visibility     = Visibility.Collapsed;
-                btnRelGerarSelecionado.IsEnabled = true;
-            } else {
-                relCmbPlaceholder.Visibility     = Visibility.Visible;
-                btnRelGerarSelecionado.IsEnabled = false;
-            }
-        }
-
-        private void BtnRelGerarSelecionado_Click(object sender, RoutedEventArgs e) {
-            if (relCmbTipo.SelectedItem is not System.Windows.Controls.ComboBoxItem item) return;
-            var tag = item.Tag as string;
-            try {
-                if (tag == "usuarios") {
-                    var usuarios = new Repositories.UsuarioRepository().ObterTodos().ToList();
-                    _relatorioService.GerarRelatorioUsuarios(usuarios);
-                } else if (tag == "produtos") {
-                    var produtos = new Repositories.ProdutoRepository().ObterTodos().ToList();
-                    _relatorioService.GerarRelatorioProdutos(produtos);
-                }
-                RelCarregarLista();
-            } catch (Exception ex) {
-                MessageBox.Show("Erro ao gerar relatório:\n\n" + ex.Message,
-                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         // ════════════════════════════════════════════════════════════
         // ── FERRAMENTAS ──────────────────────────────────────────────
         // ════════════════════════════════════════════════════════════
@@ -1003,27 +1078,48 @@ namespace PDV_CAIXA {
         }
 
         private void FerrCarregarInfo() {
-            // Parse connection string para exibir os campos
             try {
                 var cs = Config.AppConfig.ConnectionString;
-                ferrTxtHost.Text      = ExtrairParamConn(cs, "Host")     ?? "—";
-                ferrTxtPorta.Text     = ExtrairParamConn(cs, "Port")     ?? "5432";
-                ferrTxtDatabase.Text  = ExtrairParamConn(cs, "Database") ?? "—";
-                ferrTxtUsuarioDB.Text = ExtrairParamConn(cs, "Username") ?? "—";
+                ferrEdtHost.Text     = ExtrairParamConn(cs, "Host")     ?? string.Empty;
+                ferrEdtPorta.Text    = ExtrairParamConn(cs, "Port")     ?? "5432";
+                ferrEdtDatabase.Text = ExtrairParamConn(cs, "Database") ?? string.Empty;
+                ferrEdtUsuario.Text  = ExtrairParamConn(cs, "Username") ?? string.Empty;
+                ferrEdtSenha.Password = ExtrairParamConn(cs, "Password") ?? string.Empty;
             } catch {
-                ferrTxtHost.Text = ferrTxtPorta.Text = ferrTxtDatabase.Text = ferrTxtUsuarioDB.Text = "—";
+                ferrEdtHost.Text = ferrEdtPorta.Text = ferrEdtDatabase.Text = ferrEdtUsuario.Text = string.Empty;
             }
 
-            var pasta = RelatorioService.PastaRelatorios();
-            ferrTxtPastaRel.Text = pasta;
+            ferrEdtPastaRel.Text = RelatorioService.PastaRelatorios();
             ferrTxtExe.Text      = AppDomain.CurrentDomain.BaseDirectory;
 
-            // Reset status
             ferrStatusIndicador.Background = new System.Windows.Media.SolidColorBrush(
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#44446A"));
-            ferrTxtStatus.Text      = "Aguardando teste...";
+            ferrTxtStatus.Text       = "Aguardando teste...";
             ferrTxtStatus.Foreground = new System.Windows.Media.SolidColorBrush(
                 (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#44446A"));
+        }
+
+        private void BtnFerrSalvar_Click(object sender, RoutedEventArgs e) {
+            var host     = ferrEdtHost.Text.Trim();
+            var porta    = ferrEdtPorta.Text.Trim();
+            var database = ferrEdtDatabase.Text.Trim();
+            var usuario  = ferrEdtUsuario.Text.Trim();
+            var senha    = ferrEdtSenha.Password;
+
+            if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(database) || string.IsNullOrEmpty(usuario)) {
+                MessageBox.Show("Preencha ao menos Servidor, Banco e Usuário.",
+                    "Campos obrigatórios", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try {
+                Config.AppConfig.Salvar(host, porta, database, usuario, senha);
+                MessageBox.Show("Configurações salvas com sucesso!\nA nova conexão será usada a partir de agora.",
+                    "Salvo", MessageBoxButton.OK, MessageBoxImage.Information);
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao salvar:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private static string? ExtrairParamConn(string cs, string chave) {
@@ -1073,9 +1169,6 @@ namespace PDV_CAIXA {
             System.Diagnostics.Process.Start("explorer.exe", pasta);
         }
 
-        private void FerrTxtPastaRel_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) {
-            BtnFerrAbrirPasta_Click(sender, new RoutedEventArgs());
-        }
 
         private void BtnFerrTesteImpressao_Click(object sender, RoutedEventArgs e) {
             try {

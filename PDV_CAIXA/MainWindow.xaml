@@ -249,6 +249,11 @@
                             Style="{StaticResource MenuButton}"
                             Click="BtnMenuRelatorios_Click"/>
 
+                    <Button x:Name="btnMenuConfigRelatorios"
+                            Content="⚙  Config. Relatórios"
+                            Style="{StaticResource MenuButton}"
+                            Click="BtnMenuConfigRelatorios_Click"/>
+
                     <Button x:Name="btnMenuFerramentas"
                             Content="🔧  Ferramentas"
                             Style="{StaticResource MenuButton}"
@@ -1919,13 +1924,7 @@
             </Grid>
 
             <!-- Página: Usuários -->
-            <Grid x:Name="pageUsuarios" Visibility="Collapsed">
-                <Grid.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#080812" Offset="0"/>
-                        <GradientStop Color="#0A0A18" Offset="1"/>
-                    </LinearGradientBrush>
-                </Grid.Background>
+            <Grid x:Name="pageUsuarios" Visibility="Collapsed" Background="#0A0A16">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -1935,12 +1934,7 @@
 
                 <!-- ── Cabeçalho ── -->
                 <Border Grid.Row="0" Margin="0,0,0,0" Padding="20,14">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                            <GradientStop Color="#080812" Offset="0"/>
-                            <GradientStop Color="#0E0E1C" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
+                    <Border.Background><SolidColorBrush Color="#080812"/></Border.Background>
                     <Grid>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <StackPanel VerticalAlignment="Center">
@@ -1956,23 +1950,22 @@
                                            Foreground="#6C6F85" FontSize="11" FontWeight="SemiBold"
                                            HorizontalAlignment="Center"/>
                             </Border>
-                            <Button Content="+ Novo Usuário"
+                            <Button Content="＋  Novo Usuário"
                                     Height="34" Padding="16,0"
                                     FontSize="12" FontWeight="SemiBold"
-                                    Background="#1A1A38" Foreground="#8080C0"
-                                    BorderThickness="1" BorderBrush="#2A2A5A" Cursor="Hand"
+                                    Foreground="White" Cursor="Hand"
                                     Click="BtnNovoUsuario_Click">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                                CornerRadius="7" BorderBrush="{TemplateBinding BorderBrush}"
-                                                BorderThickness="{TemplateBinding BorderThickness}">
+                                        <Border x:Name="bd" Background="#7C83FF" CornerRadius="6">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bd" Property="Background" Value="#22224A"/>
-                                                <Setter TargetName="bd" Property="BorderBrush" Value="#4040A0"/>
+                                                <Setter TargetName="bd" Property="Background" Value="#6970E0"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="#555BC4"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -2027,10 +2020,10 @@
 
                 <DataGrid Grid.Row="3" x:Name="dgUsuarios"
                           AutoGenerateColumns="False"
-                          Background="Transparent" BorderThickness="0"
-                          RowBackground="#0C0C18"
-                          AlternatingRowBackground="#0F0F1E"
-                          Foreground="#B0B0D0"
+                          Background="#0C0C18" BorderThickness="0"
+                          RowBackground="#0F0F1E"
+                          AlternatingRowBackground="#0C0C18"
+                          Foreground="#C0C0D8"
                           GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="#14142A"
                           ColumnHeaderHeight="38" RowHeight="52"
@@ -2095,10 +2088,10 @@
                                             ClipToBounds="True"
                                             HorizontalAlignment="Center">
                                         <Grid>
-                                            <Border Background="#0D0D20">
+                                            <Border Background="#252538">
                                                 <TextBlock Text="{Binding Iniciais}"
                                                            FontSize="12" FontWeight="Bold"
-                                                           Foreground="#40406A"
+                                                           Foreground="#7C83FF"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
                                             </Border>
@@ -2118,6 +2111,7 @@
                                     <Setter Property="FontSize" Value="13"/>
                                     <Setter Property="Foreground" Value="#C0C0E0"/>
                                     <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="#C0C0D8"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -2129,19 +2123,19 @@
                                     <Border x:Name="badgePerfil" CornerRadius="12"
                                             Padding="10,4" HorizontalAlignment="Left"
                                             VerticalAlignment="Center"
-                                            Background="#1A1A2E">
+                                            Background="#252538">
                                         <TextBlock x:Name="txtPerfil" Text="{Binding Perfil}"
                                                    FontSize="10" FontWeight="Bold"
-                                                   Foreground="#44446A" VerticalAlignment="Center"/>
+                                                   Foreground="#A0A0C0" VerticalAlignment="Center"/>
                                     </Border>
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding Perfil}" Value="admin">
-                                            <Setter TargetName="badgePerfil" Property="Background" Value="#0C1430"/>
+                                            <Setter TargetName="badgePerfil" Property="Background" Value="#1A1A3E"/>
                                             <Setter TargetName="txtPerfil" Property="Text" Value="ADMIN"/>
-                                            <Setter TargetName="txtPerfil" Property="Foreground" Value="#6060C0"/>
+                                            <Setter TargetName="txtPerfil" Property="Foreground" Value="#7C83FF"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Perfil}" Value="usuario">
-                                            <Setter TargetName="badgePerfil" Property="Background" Value="#0C2014"/>
+                                            <Setter TargetName="badgePerfil" Property="Background" Value="#142A1C"/>
                                             <Setter TargetName="txtPerfil" Property="Text" Value="USUÁRIO"/>
                                             <Setter TargetName="txtPerfil" Property="Foreground" Value="#50FA7B"/>
                                         </DataTrigger>
@@ -2157,8 +2151,8 @@
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <Button Tag="{Binding}"
                                                 Height="28" Padding="12,0" FontSize="11"
-                                                Background="#0E0E1E" Foreground="#55557A"
-                                                BorderThickness="1" BorderBrush="#1E1E38" Cursor="Hand"
+                                                Background="#0C1428" Foreground="#7C83FF"
+                                                BorderThickness="1" BorderBrush="#1A2A4A" Cursor="Hand"
                                                 Margin="0,0,8,0"
                                                 Click="BtnEditar_Click">
                                             <Button.Template>
@@ -2172,8 +2166,8 @@
                                                     </Border>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="bd" Property="Background" Value="#141430"/>
-                                                            <Setter TargetName="bd" Property="BorderBrush" Value="#2A2A5A"/>
+                                                            <Setter TargetName="bd" Property="Background" Value="#141C38"/>
+                                                            <Setter TargetName="bd" Property="BorderBrush" Value="#2A3A60"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -3260,7 +3254,6 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -3277,166 +3270,147 @@
                                 BorderThickness="0" Cursor="Hand"
                                 Click="BtnRelAtualizar_Click"/>
                     </StackPanel>
-                    <Button x:Name="btnRelGerarSelecionado"
-                            HorizontalAlignment="Right"
-                            Height="34" Padding="18,0"
-                            FontSize="12" FontWeight="SemiBold"
-                            Foreground="White" BorderThickness="0" Cursor="Hand"
-                            IsEnabled="False" Click="BtnRelGerarSelecionado_Click">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="#1A1A2E"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsEnabled" Value="True">
-                                        <Setter Property="Background" Value="#007ACC"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                      Margin="{TemplateBinding Padding}"/>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="bd" Property="Background" Value="#005FA3"/>
-                                    </Trigger>
-                                    <Trigger Property="IsEnabled" Value="False">
-                                        <Setter TargetName="bd" Property="Background" Value="#1A1A2E"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Button.Template>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🖨" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Gerar / Imprimir" VerticalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#44446A"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- Seletor de relatório -->
+                        <Border BorderBrush="#2A2A4A" BorderThickness="0,0,0,1"
+                                Width="240" Padding="0,2,0,4" Margin="0,0,10,0">
+                            <Grid>
+                                <TextBlock x:Name="relCmbPlaceholder" Text="Selecione o relatório..."
+                                           Foreground="#44446A" FontSize="12"
+                                           VerticalAlignment="Center" Margin="2,0,0,0"
+                                           IsHitTestVisible="False"/>
+                                <ComboBox x:Name="relCmbTipo"
+                                          Background="Transparent" Foreground="#D0D0E0"
+                                          BorderThickness="0" FontSize="12"
+                                          SelectionChanged="RelCmbTipo_SelectionChanged">
+                                    <ComboBox.Template>
+                                        <ControlTemplate TargetType="ComboBox">
+                                            <Grid>
+                                                <ToggleButton Background="Transparent" BorderThickness="0"
+                                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                                              Focusable="False" ClickMode="Press">
+                                                    <ToggleButton.Template>
+                                                        <ControlTemplate TargetType="ToggleButton">
+                                                            <Border Background="Transparent">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="20"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="1" Text="▾" Foreground="#44446A"
+                                                                               FontSize="11" VerticalAlignment="Center"
+                                                                               HorizontalAlignment="Center"/>
+                                                                </Grid>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </ToggleButton.Template>
+                                                </ToggleButton>
+                                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                                  IsHitTestVisible="False"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="2,0,22,0"/>
+                                                <Popup IsOpen="{TemplateBinding IsDropDownOpen}"
+                                                       Placement="Bottom" AllowsTransparency="True"
+                                                       Focusable="False" PopupAnimation="Slide">
+                                                    <Border Background="#0C0C1A" BorderBrush="#2A2A4A"
+                                                            BorderThickness="1"
+                                                            MinWidth="{TemplateBinding ActualWidth}"
+                                                            MaxHeight="220">
+                                                        <ScrollViewer>
+                                                            <StackPanel IsItemsHost="True"/>
+                                                        </ScrollViewer>
+                                                    </Border>
+                                                </Popup>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </ComboBox.Template>
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Background" Value="#0C0C1A"/>
+                                            <Setter Property="Foreground" Value="#D0D0E0"/>
+                                            <Setter Property="FontSize"   Value="12"/>
+                                            <Setter Property="Padding"    Value="12,9"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter Property="Background" Value="#1A1A3A"/>
+                                                    <Setter Property="Foreground" Value="#7C83FF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#14142E"/>
+                                                    <Setter Property="Foreground" Value="#A0A4FF"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                </ComboBox>
+                            </Grid>
+                        </Border>
+                        <!-- Botão Gerar -->
+                        <Button x:Name="btnRelGerarSelecionado"
+                                Height="34" Padding="16,0" Margin="0,0,8,0"
+                                FontSize="12" FontWeight="SemiBold"
+                                Cursor="Hand" IsEnabled="False"
+                                Click="BtnRelGerarSelecionado_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="#1A1A2E" CornerRadius="6">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                          Margin="{TemplateBinding Padding}"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsEnabled" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#007ACC"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#005FA3"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter TargetName="bd" Property="Background" Value="#1A1A2E"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🖨" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#44446A"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="Gerar" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#44446A"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Seletor -->
-            <Border Grid.Row="1" Padding="24,18" Background="#080812"
+            <!-- Label arquivos gerados -->
+            <Border Grid.Row="1" Padding="24,10,24,8" Background="#080812"
                     BorderBrush="#14142A" BorderThickness="0,0,0,1">
-                <StackPanel Orientation="Horizontal">
-                    <!-- ComboBox -->
-                    <Border BorderBrush="#2A2A4A" BorderThickness="0,0,0,1" Width="420" Padding="0,2,0,4">
-                        <Grid>
-                            <TextBlock x:Name="relCmbPlaceholder" Text="Relatórios *"
-                                       Foreground="#44446A" FontSize="12"
-                                       VerticalAlignment="Center" Margin="2,0,0,0"
-                                       IsHitTestVisible="False"/>
-                            <ComboBox x:Name="relCmbTipo"
-                                      Background="Transparent" Foreground="#D0D0E0"
-                                      BorderThickness="0" FontSize="13"
-                                      SelectionChanged="RelCmbTipo_SelectionChanged">
-                                <ComboBox.Template>
-                                    <ControlTemplate TargetType="ComboBox">
-                                        <Grid>
-                                            <ToggleButton x:Name="toggleBtn"
-                                                          Background="Transparent" BorderThickness="0"
-                                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                                          Focusable="False" ClickMode="Press">
-                                                <ToggleButton.Template>
-                                                    <ControlTemplate TargetType="ToggleButton">
-                                                        <Border Background="Transparent">
-                                                            <Grid>
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="20"/>
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBlock Grid.Column="1" Text="▾"
-                                                                           Foreground="#44446A" FontSize="11"
-                                                                           VerticalAlignment="Center"
-                                                                           HorizontalAlignment="Center"/>
-                                                            </Grid>
-                                                        </Border>
-                                                    </ControlTemplate>
-                                                </ToggleButton.Template>
-                                            </ToggleButton>
-                                            <ContentPresenter x:Name="contentPresenter"
-                                                              Content="{TemplateBinding SelectionBoxItem}"
-                                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                              IsHitTestVisible="False"
-                                                              VerticalAlignment="Center"
-                                                              Margin="2,0,22,0"/>
-                                            <Popup x:Name="PART_Popup"
-                                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                                   Placement="Bottom"
-                                                   AllowsTransparency="True"
-                                                   Focusable="False"
-                                                   PopupAnimation="Slide">
-                                                <Border Background="#0C0C1A"
-                                                        BorderBrush="#2A2A4A" BorderThickness="1"
-                                                        MinWidth="{TemplateBinding ActualWidth}"
-                                                        MaxHeight="220">
-                                                    <ScrollViewer>
-                                                        <StackPanel IsItemsHost="True"/>
-                                                    </ScrollViewer>
-                                                </Border>
-                                            </Popup>
-                                        </Grid>
-                                    </ControlTemplate>
-                                </ComboBox.Template>
-                                <ComboBox.ItemContainerStyle>
-                                    <Style TargetType="ComboBoxItem">
-                                        <Setter Property="Background"  Value="#0C0C1A"/>
-                                        <Setter Property="Foreground"  Value="#D0D0E0"/>
-                                        <Setter Property="FontSize"    Value="13"/>
-                                        <Setter Property="Padding"     Value="12,9"/>
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="ComboBoxItem">
-                                                    <Border x:Name="bd"
-                                                            Background="{TemplateBinding Background}"
-                                                            Padding="{TemplateBinding Padding}">
-                                                        <ContentPresenter/>
-                                                    </Border>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsHighlighted" Value="True">
-                                                            <Setter TargetName="bd" Property="Background" Value="#1A1A3A"/>
-                                                            <Setter Property="Foreground" Value="#7C83FF"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsSelected" Value="True">
-                                                            <Setter TargetName="bd" Property="Background" Value="#14142E"/>
-                                                            <Setter Property="Foreground" Value="#A0A4FF"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </ComboBox.ItemContainerStyle>
-                                <ComboBoxItem Content="Usuários Cadastrados"  Tag="usuarios"/>
-                                <ComboBoxItem Content="Produtos Cadastrados"  Tag="produtos"/>
-                            </ComboBox>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-            </Border>
-
-            <!-- Label lista -->
-            <Border Grid.Row="2" Padding="24,10,24,8" Background="#080812"
-                    BorderBrush="#14142A" BorderThickness="0,0,0,1">
-                <TextBlock Text="RELATÓRIOS GERADOS" Foreground="#44446A"
+                <TextBlock Text="ARQUIVOS GERADOS" Foreground="#44446A"
                            FontSize="10" FontWeight="Bold"/>
             </Border>
 
             <!-- Lista de PDFs gerados -->
-            <Grid Grid.Row="3">
+            <Grid Grid.Row="2">
                 <DataGrid x:Name="relDgArquivos"
                           AutoGenerateColumns="False"
                           Background="#0C0C18" RowBackground="#0F0F1E"
@@ -3602,118 +3576,206 @@
             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="28,24,28,24">
 
-                    <!-- ── Banco de Dados ── -->
+                    <!-- ── Banco de Dados (editável) ── -->
                     <Border Background="#0C0C1A" BorderBrush="#1C1C2E" BorderThickness="1"
                             CornerRadius="10" Padding="22,18" Margin="0,0,0,16">
                         <StackPanel>
                             <TextBlock Text="🗄  BANCO DE DADOS" Foreground="#44446A"
-                                       FontSize="10" FontWeight="Bold" Margin="0,0,0,14"/>
+                                       FontSize="10" FontWeight="Bold" Margin="0,0,0,16"/>
 
-                            <Grid Margin="0,0,0,10">
+                            <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="30"/>
-                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="SERVIDOR" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="ferrEdtHost" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="PORTA" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="ferrEdtPorta" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Servidor:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="ferrTxtHost" Foreground="#D0D0E0" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="3" Text="Porta:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="4" x:Name="ferrTxtPorta" Foreground="#D0D0E0" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="30"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Banco:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="ferrTxtDatabase" Foreground="#D0D0E0" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="3" Text="Usuário:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="4" x:Name="ferrTxtUsuarioDB" Foreground="#D0D0E0" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="BANCO" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="ferrEdtDatabase" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="USUÁRIO" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="ferrEdtUsuario" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
                             </Grid>
 
-                            <!-- Status + botão testar -->
-                            <Grid Margin="0,10,0,0">
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="SENHA" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                <PasswordBox x:Name="ferrEdtSenha" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5"/>
+                            </StackPanel>
+
+                            <!-- Status + botões -->
+                            <Grid>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border x:Name="ferrStatusIndicador"
                                             Width="10" Height="10" CornerRadius="5"
                                             Background="#44446A" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="ferrTxtStatus"
-                                               Text="Aguardando teste..."
+                                    <TextBlock x:Name="ferrTxtStatus" Text="Aguardando teste..."
                                                Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <Button HorizontalAlignment="Right"
-                                        Content="▶  Testar Conexão"
-                                        Height="32" Padding="16,0"
-                                        FontSize="12" FontWeight="SemiBold"
-                                        Background="#007ACC" Foreground="White"
-                                        BorderThickness="0" Cursor="Hand"
-                                        Click="BtnFerrTestarConexao_Click">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="▶  Testar Conexão"
+                                            Height="34" Padding="16,0" Margin="0,0,8,0"
+                                            FontSize="12" FontWeight="SemiBold"
+                                            Cursor="Hand" Click="BtnFerrTestarConexao_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="#007ACC" CornerRadius="6">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                      Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#005FA3"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                        <Button.Foreground><SolidColorBrush Color="White"/></Button.Foreground>
+                                    </Button>
+                                    <Button Content="💾  Salvar"
+                                            Height="34" Padding="16,0"
+                                            FontSize="12" FontWeight="SemiBold"
+                                            Cursor="Hand" Click="BtnFerrSalvar_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="#7C83FF" CornerRadius="6">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                      Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#6970E0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                        <Button.Foreground><SolidColorBrush Color="White"/></Button.Foreground>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── Pasta de Relatórios (editável) ── -->
+                    <Border Background="#0C0C1A" BorderBrush="#1C1C2E" BorderThickness="1"
+                            CornerRadius="10" Padding="22,18" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="📁  PASTA DE RELATÓRIOS" Foreground="#44446A"
+                                       FontSize="10" FontWeight="Bold" Margin="0,0,0,16"/>
+                            <TextBlock Text="Caminho onde os PDFs gerados serão salvos:"
+                                       Foreground="#6C6F85" FontSize="11" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" x:Name="ferrEdtPastaRel"
+                                         Height="36" FontSize="12" Padding="10,0"
+                                         Background="#151528" Foreground="#7C83FF" CaretBrush="#7C83FF"
+                                         BorderBrush="#2A2A4A" BorderThickness="1.5"
+                                         VerticalContentAlignment="Center" IsReadOnly="True"/>
+                                <Button Grid.Column="2" Content="📁  Alterar"
+                                        Height="36" Padding="14,0"
+                                        FontSize="12" Cursor="Hand"
+                                        Click="BtnFerrAbrirPasta_Click">
                                     <Button.Template>
                                         <ControlTemplate TargetType="Button">
-                                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                                            <Border x:Name="bd" Background="#2A2A3E"
+                                                    BorderBrush="#3A3A55" BorderThickness="1.5" CornerRadius="6">
                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                                                   Margin="{TemplateBinding Padding}"/>
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="bd" Property="Background" Value="#005FA3"/>
+                                                    <Setter TargetName="bd" Property="Background" Value="#33334A"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </Button.Template>
+                                    <Button.Foreground><SolidColorBrush Color="#A0A0C0"/></Button.Foreground>
                                 </Button>
                             </Grid>
                         </StackPanel>
                     </Border>
 
-                    <!-- ── Sistema ── -->
+                    <!-- ── Sistema (somente leitura) ── -->
                     <Border Background="#0C0C1A" BorderBrush="#1C1C2E" BorderThickness="1"
                             CornerRadius="10" Padding="22,18" Margin="0,0,0,16">
                         <StackPanel>
                             <TextBlock Text="⚙  SISTEMA" Foreground="#44446A"
                                        FontSize="10" FontWeight="Bold" Margin="0,0,0,14"/>
-
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="160"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="160"/><ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Versão:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Text="1.0.0" Foreground="#D0D0E0" FontSize="12" FontWeight="SemiBold"/>
                             </Grid>
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="160"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="160"/><ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Framework:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Text=".NET 8.0 (WPF)" Foreground="#D0D0E0" FontSize="12" FontWeight="SemiBold"/>
                             </Grid>
-                            <Grid Margin="0,0,0,8">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="160"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Pasta Relatórios:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="ferrTxtPastaRel"
-                                           Foreground="#7C83FF" FontSize="11"
-                                           TextWrapping="Wrap" Cursor="Hand"
-                                           MouseLeftButtonDown="FerrTxtPastaRel_Click"/>
-                            </Grid>
-                            <Grid Margin="0,0,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="160"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="160"/><ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Executável:" Foreground="#44446A" FontSize="12" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" x:Name="ferrTxtExe"
-                                           Foreground="#44446A" FontSize="11"
-                                           TextWrapping="Wrap"/>
+                                <TextBlock Grid.Column="1" x:Name="ferrTxtExe" Foreground="#44446A" FontSize="11" TextWrapping="Wrap"/>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -3725,29 +3787,6 @@
                             <TextBlock Text="⚡  AÇÕES RÁPIDAS" Foreground="#44446A"
                                        FontSize="10" FontWeight="Bold" Margin="0,0,0,14"/>
                             <WrapPanel Orientation="Horizontal">
-
-                                <Button Content="📁  Abrir pasta de relatórios"
-                                        Height="36" Padding="16,0" Margin="0,0,10,10"
-                                        FontSize="12" FontWeight="SemiBold"
-                                        Background="#0C0C1A" Foreground="#7C83FF"
-                                        BorderThickness="1" BorderBrush="#2A2A5A"
-                                        Cursor="Hand" Click="BtnFerrAbrirPasta_Click">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                                    CornerRadius="6" BorderBrush="{TemplateBinding BorderBrush}"
-                                                    BorderThickness="{TemplateBinding BorderThickness}">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="bd" Property="Background" Value="#14142A"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-
                                 <Button Content="🖨  Teste de impressão"
                                         Height="36" Padding="16,0" Margin="0,0,10,10"
                                         FontSize="12" FontWeight="SemiBold"
@@ -3769,13 +3808,208 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                 </Button>
-
                             </WrapPanel>
                         </StackPanel>
                     </Border>
 
                 </StackPanel>
             </ScrollViewer>
+        </Grid>
+
+        <!-- ══════════════ PÁGINA: CONFIG. RELATÓRIOS ══════════════ -->
+        <Grid x:Name="pageConfigRelatorios" Visibility="Collapsed" Background="#0A0A16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Cabeçalho -->
+            <Border Grid.Row="0" Padding="24,14" Background="#080812"
+                    BorderBrush="#14142A" BorderThickness="0,0,0,1">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Configuração de Relatórios" Foreground="#D0D0E0"
+                                   FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" Height="34" Padding="16,0"
+                            FontSize="12" FontWeight="SemiBold"
+                            Cursor="Hand" Click="BtnConfigRelNovo_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="#7C83FF" CornerRadius="6">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#6970E0"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#555BC4"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="＋" FontSize="14" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Novo Relatório" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Label -->
+            <Border Grid.Row="1" Padding="24,10,24,8" Background="#080812"
+                    BorderBrush="#14142A" BorderThickness="0,0,0,1">
+                <TextBlock Text="RELATÓRIOS CADASTRADOS" Foreground="#44446A"
+                           FontSize="10" FontWeight="Bold"/>
+            </Border>
+
+            <!-- DataGrid -->
+            <DataGrid Grid.Row="2" x:Name="cfgRelDgConfigs"
+                      AutoGenerateColumns="False"
+                      Background="#0C0C18" RowBackground="#0F0F1E"
+                      AlternatingRowBackground="#0C0C18"
+                      Foreground="#C0C0D8" BorderThickness="0"
+                      GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#14142A"
+                      CanUserAddRows="False" IsReadOnly="True"
+                      SelectionMode="Single" HeadersVisibility="Column">
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#08080E"/>
+                        <Setter Property="Foreground" Value="#40406A"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize"   Value="10"/>
+                        <Setter Property="Padding"    Value="14,8"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush"     Value="#14142A"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Height" Value="42"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#0D2A3A"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#14142E"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#00BCD4"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin"        Value="14,0,0,0"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="FontWeight"    Value="SemiBold"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Arquivo .rdlc" Binding="{Binding NomeArquivo}" Width="200">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin"            Value="4,0"/>
+                                <Setter Property="Foreground"        Value="#7C83FF"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Tipo" Binding="{Binding TipoLabel}" Width="160">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin"            Value="4,0"/>
+                                <Setter Property="Foreground"        Value="#A0A0C0"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Ativo" Binding="{Binding AtivoTexto}" Width="60">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin"            Value="4,0"/>
+                                <Setter Property="Foreground"        Value="#50FA7B"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Ordem" Binding="{Binding Ordem}" Width="60">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin"            Value="4,0"/>
+                                <Setter Property="Foreground"        Value="#6C6F85"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTemplateColumn Header="Ações" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="8,0">
+                                    <Button Content="✏ Editar" Height="26" Padding="10,0"
+                                            FontSize="10" FontWeight="SemiBold"
+                                            Background="#0C1428" Foreground="#7C83FF"
+                                            BorderThickness="1" BorderBrush="#1A2A4A"
+                                            Cursor="Hand" Margin="0,0,6,0"
+                                            Tag="{Binding}" Click="BtnConfigRelEditar_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                        CornerRadius="4" BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                      Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#141C38"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                    <Button Content="🗑" Height="26" Width="30" FontSize="12"
+                                            Background="#1A0808" Foreground="#FF6B6B"
+                                            BorderThickness="1" BorderBrush="#2A1010"
+                                            Cursor="Hand" Tag="{Binding}" Click="BtnConfigRelExcluir_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                                        CornerRadius="4" BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#2A0C0C"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
         </Grid>
 
         </Grid>

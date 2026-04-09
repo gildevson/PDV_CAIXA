@@ -544,10 +544,10 @@
             </Style>
           </Tablix>
         </ReportItems>
-        <Height>29cm</Height>
+        <Height>4cm</Height>
         <Style />
       </Body>
-      <Width>17.50271cm</Width>
+      <Width>17cm</Width>
       <Page>
         <PageHeight>29.7cm</PageHeight>
         <PageWidth>21cm</PageWidth>

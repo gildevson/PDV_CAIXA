@@ -398,7 +398,7 @@ public class RelatorioService
     // ═══════════════════════════════════════════════════════════════
     // RELATÓRIO DE USUÁRIOS CADASTRADOS — A4 via RDLC
     // ═══════════════════════════════════════════════════════════════
-    public void GerarRelatorioUsuarios(IEnumerable<Usuario> usuarios)
+    public void GerarRelatorioUsuarios(IEnumerable<Usuario> usuarios, string nomeArquivo = "RelatorioUsuarios.rdlc")
     {
         var lista = usuarios.ToList();
 
@@ -414,12 +414,13 @@ public class RelatorioService
             ["TotalUsuarios"] = lista.Count.ToString()
         };
 
-        var rdlcService = new RdlcRelatorioService();
-        var pdfBytes = rdlcService.GerarPdfBytes("RelatorioUsuarios.rdlc", "DataSetUsuarios", dt, parametros);
+        var rdlcService  = new RdlcRelatorioService();
+        var pdfBytes     = rdlcService.GerarPdfBytes(nomeArquivo, "DataSetUsuarios", dt, parametros);
+        var nomePdf      = Path.GetFileNameWithoutExtension(nomeArquivo);
 
         var pasta = PastaRelatorios();
         Directory.CreateDirectory(pasta);
-        var caminho = Path.Combine(pasta, $"RelatorioUsuarios_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        var caminho = Path.Combine(pasta, $"{nomePdf}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
         File.WriteAllBytes(caminho, pdfBytes);
 
         var preview = new PDV_CAIXA.Views.RelatorioPreviewWindow("Usuários Cadastrados", caminho);
@@ -429,7 +430,7 @@ public class RelatorioService
     // ═══════════════════════════════════════════════════════════════
     // RELATÓRIO DE PRODUTOS CADASTRADOS — A4 via RDLC
     // ═══════════════════════════════════════════════════════════════
-    public void GerarRelatorioProdutos(IEnumerable<Produto> produtos)
+    public void GerarRelatorioProdutos(IEnumerable<Produto> produtos, string nomeArquivo = "RelatorioProdutos.rdlc")
     {
         var lista = produtos.ToList();
 
@@ -455,12 +456,13 @@ public class RelatorioService
             ["TotalProdutos"] = lista.Count.ToString()
         };
 
-        var rdlcService = new RdlcRelatorioService();
-        var pdfBytes = rdlcService.GerarPdfBytes("RelatorioProdutos.rdlc", "DataSetProdutos", dt, parametros);
+        var rdlcService  = new RdlcRelatorioService();
+        var pdfBytes     = rdlcService.GerarPdfBytes(nomeArquivo, "DataSetProdutos", dt, parametros);
+        var nomePdf      = Path.GetFileNameWithoutExtension(nomeArquivo);
 
         var pasta = PastaRelatorios();
         Directory.CreateDirectory(pasta);
-        var caminho = Path.Combine(pasta, $"RelatorioProdutos_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        var caminho = Path.Combine(pasta, $"{nomePdf}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
         File.WriteAllBytes(caminho, pdfBytes);
 
         var preview = new PDV_CAIXA.Views.RelatorioPreviewWindow("Produtos Cadastrados", caminho);
