@@ -584,12 +584,7 @@
       <Prompt>Operador</Prompt>
     </ReportParameter>
   </ReportParameters>
-  <ReportParametersLayout>
-    <GridLayoutDefinition>
-      <NumberOfColumns>4</NumberOfColumns>
-      <NumberOfRows>2</NumberOfRows>
-    </GridLayoutDefinition>
-  </ReportParametersLayout>
+
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
   <rd:ReportID>c3d4e5f6-2222-3333-4444-000000000005</rd:ReportID>
 </Report>

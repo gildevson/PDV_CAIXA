@@ -692,9 +692,12 @@ namespace PDV_CAIXA {
                     msg + "\n\nDeseja imprimir o Recibo de Venda?",
                     "Sucesso", MessageBoxButton.YesNo, MessageBoxImage.Information);
                 if (reciboResult == MessageBoxResult.Yes)
-                    _relatorioService.ImprimirReciboTermico(pedido, itensPedido, pagsPedido, janela.Troco, _usuarioLogado.Nome);
+                    _relatorioService.GerarReciboPedido(pedido, itensPedido, pagsPedido, janela.Troco, _usuarioLogado.Nome);
             } catch (Exception ex) {
-                MessageBox.Show("Erro ao finalizar pedido:\n\n" + ex.Message,
+                var sb = new System.Text.StringBuilder();
+                var exc = ex;
+                while (exc != null) { sb.AppendLine(exc.Message); exc = exc.InnerException; }
+                MessageBox.Show("Erro ao finalizar pedido:\n\n" + sb,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
