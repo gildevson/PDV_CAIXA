@@ -685,21 +685,14 @@ namespace PDV_CAIXA {
                     ? $"Pedido finalizado com sucesso!\n\n💵 Troco: {janela.Troco.ToString("C2", ptBR)}"
                     : "Pedido finalizado com sucesso!";
 
-                var printMsg = msg + "\n\nDeseja imprimir o cupom?";
-                var printResult = MessageBox.Show(printMsg, "Sucesso",
-                    MessageBoxButton.YesNo, MessageBoxImage.Information);
-
                 var itensPedido = _pedidoRepository.ObterItens(pedido.Id).ToList();
                 var pagsPedido  = janela.Pagamentos.Select(p => new PagamentoCupom(p.Forma, p.Valor)).ToList();
 
-                if (printResult == MessageBoxResult.Yes)
-                    _relatorioService.ImprimirCupomVenda(pedido, itensPedido, pagsPedido, janela.Troco, _usuarioLogado.Nome);
-
                 var reciboResult = MessageBox.Show(
-                    "Deseja gerar o Recibo de Venda (PDF A4)?",
-                    "Recibo", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    msg + "\n\nDeseja imprimir o Recibo de Venda?",
+                    "Sucesso", MessageBoxButton.YesNo, MessageBoxImage.Information);
                 if (reciboResult == MessageBoxResult.Yes)
-                    _relatorioService.GerarReciboPedido(pedido, itensPedido, pagsPedido, janela.Troco, _usuarioLogado.Nome);
+                    _relatorioService.ImprimirReciboTermico(pedido, itensPedido, pagsPedido, janela.Troco, _usuarioLogado.Nome);
             } catch (Exception ex) {
                 MessageBox.Show("Erro ao finalizar pedido:\n\n" + ex.Message,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);

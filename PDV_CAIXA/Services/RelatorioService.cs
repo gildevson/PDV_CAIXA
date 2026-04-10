@@ -513,6 +513,173 @@ public class RelatorioService
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // RECIBO DE VENDA — Impressora Térmica 80 mm (FastReport)
+    // ═══════════════════════════════════════════════════════════════
+    public void ImprimirReciboTermico(
+        Pedido pedido,
+        List<PedidoItem> itens,
+        List<PagamentoCupom> pagamentos,
+        decimal troco,
+        string nomeOperador)
+    {
+        var empresa = new Repositories.EmpresaRepository().Obter();
+        var nomeEmp = !string.IsNullOrWhiteSpace(empresa.NomeFantasia)
+                          ? empresa.NomeFantasia : empresa.RazaoSocial;
+
+        var report = new Report();
+        var page   = new ReportPage();
+        report.Pages.Add(page);
+
+        page.PaperWidth   = 80;
+        page.PaperHeight  = 297;
+        page.LeftMargin   = 3;
+        page.RightMargin  = 3;
+        page.TopMargin    = 4;
+        page.BottomMargin = 4;
+
+        float w = MM(page.PaperWidth - page.LeftMargin - page.RightMargin); // ~74mm
+
+        // ── DataTable: Nome | QtdUnit (ex: "2x @ R$2,25") | Subtotal ─
+        var ds = new DataSet();
+        var dt = new DataTable("Itens");
+        dt.Columns.Add("Nome");
+        dt.Columns.Add("QtdUnit");
+        dt.Columns.Add("Total");
+        foreach (var item in itens)
+            dt.Rows.Add(
+                item.NomeProduto,
+                $"{item.Quantidade}x  @{item.PrecoUnitario.ToString("N2", PtBR)}",
+                item.Subtotal.ToString("C2", PtBR));
+        ds.Tables.Add(dt);
+        report.RegisterData(ds);
+
+        // ── BAND: Cabeçalho ────────────────────────────────────────
+        var titleBand = new ReportTitleBand();
+        float ty = 0;
+
+        // Nome da empresa
+        if (!string.IsNullOrWhiteSpace(nomeEmp))
+        { Txt(titleBand, nomeEmp.ToUpper(), 0, ty, w, MM(9), 13, FontStyle.Bold, HorzAlign.Center); ty += MM(11); }
+
+        // CNPJ
+        if (!string.IsNullOrWhiteSpace(empresa.Cnpj))
+        { Txt(titleBand, $"CNPJ: {empresa.Cnpj}", 0, ty, w, MM(5), 8, FontStyle.Regular, HorzAlign.Center); ty += MM(6); }
+
+        // Endereço
+        var end = string.IsNullOrWhiteSpace(empresa.Logradouro) ? "" :
+                  empresa.Logradouro + ", " + empresa.Numero +
+                  (!string.IsNullOrWhiteSpace(empresa.Complemento) ? " - " + empresa.Complemento : "");
+        if (!string.IsNullOrWhiteSpace(end))
+        { Txt(titleBand, end, 0, ty, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center, true); ty += MM(6); }
+
+        // Cidade/UF/CEP
+        var cidadeUf = string.IsNullOrWhiteSpace(empresa.Cidade) ? "" :
+                       empresa.Cidade + " - " + empresa.Uf +
+                       (!string.IsNullOrWhiteSpace(empresa.Cep) ? "  CEP: " + empresa.Cep : "");
+        if (!string.IsNullOrWhiteSpace(cidadeUf))
+        { Txt(titleBand, cidadeUf, 0, ty, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center); ty += MM(6); }
+
+        // Telefone
+        if (!string.IsNullOrWhiteSpace(empresa.Telefone))
+        { Txt(titleBand, $"Tel: {empresa.Telefone}", 0, ty, w, MM(5), 8, FontStyle.Regular, HorzAlign.Center); ty += MM(7); }
+
+        DuplaLinha(titleBand, 0, ty, w); ty += MM(4);
+
+        Txt(titleBand, "RECIBO DE VENDA", 0, ty, w, MM(8), 14, FontStyle.Bold, HorzAlign.Center); ty += MM(10);
+
+        DuplaLinha(titleBand, 0, ty, w); ty += MM(5);
+
+        // Info do pedido
+        Txt(titleBand, $"Pedido: #{pedido.Numero:D5}",
+            0, ty, w * 0.55f, MM(5), 8, FontStyle.Regular, HorzAlign.Left);
+        Txt(titleBand, pedido.Data.ToString("dd/MM/yy HH:mm", PtBR),
+            w * 0.55f, ty, w * 0.45f, MM(5), 8, FontStyle.Regular, HorzAlign.Right);
+        ty += MM(6);
+        Txt(titleBand, $"Operador: {nomeOperador}", 0, ty, w, MM(5), 8, FontStyle.Regular, HorzAlign.Left);
+        ty += MM(7);
+
+        LinhaPontilhada(titleBand, 0, ty, w); ty += MM(4);
+
+        // Cabeçalho das colunas de itens
+        float cNome  = w * 0.48f;
+        float cQtdU  = w * 0.28f;
+        float cTotal = w * 0.24f;
+
+        Txt(titleBand, "PRODUTO",   0,               ty, cNome,  MM(5), 8, FontStyle.Bold, HorzAlign.Left);
+        Txt(titleBand, "QTD/UNIT",  cNome,            ty, cQtdU,  MM(5), 8, FontStyle.Bold, HorzAlign.Center);
+        Txt(titleBand, "TOTAL",     cNome + cQtdU,    ty, cTotal, MM(5), 8, FontStyle.Bold, HorzAlign.Right);
+        ty += MM(5);
+        LinhaPontilhada(titleBand, 0, ty, w); ty += MM(2);
+
+        titleBand.Height = ty;
+        page.ReportTitle = titleBand;
+
+        // ── BAND: Itens (cada linha = 1 produto) ───────────────────
+        var dataBand        = new DataBand();
+        dataBand.DataSource = report.GetDataSource("Itens");
+        dataBand.Height     = MM(8);
+
+        Txt(dataBand, "[Itens.Nome]",    0,            0, cNome,  dataBand.Height, 7, FontStyle.Regular, HorzAlign.Left,   true);
+        Txt(dataBand, "[Itens.QtdUnit]", cNome,         0, cQtdU,  dataBand.Height, 7, FontStyle.Regular, HorzAlign.Center, true);
+        Txt(dataBand, "[Itens.Total]",   cNome + cQtdU, 0, cTotal, dataBand.Height, 7, FontStyle.Bold,    HorzAlign.Right);
+        page.Bands.Add(dataBand);
+
+        // ── BAND: Rodapé ───────────────────────────────────────────
+        var summaryBand = new ReportSummaryBand();
+        float sy = MM(3);
+
+        LinhaPontilhada(summaryBand, 0, sy, w); sy += MM(4);
+
+        // Formas de pagamento
+        Txt(summaryBand, "PAGAMENTO", 0, sy, w, MM(5), 8, FontStyle.Bold, HorzAlign.Left); sy += MM(6);
+        foreach (var pag in pagamentos)
+        {
+            var label = pag.Forma switch {
+                "dinheiro" => "Dinheiro",
+                "credito"  => "Cartão Crédito",
+                "debito"   => "Cartão Débito",
+                "pix"      => "PIX",
+                _          => pag.Forma
+            };
+            Txt(summaryBand, label,                           0,        sy, w * 0.62f, MM(6), 9, FontStyle.Regular, HorzAlign.Left);
+            Txt(summaryBand, pag.Valor.ToString("C2", PtBR), w * 0.62f, sy, w * 0.38f, MM(6), 9, FontStyle.Regular, HorzAlign.Right);
+            sy += MM(7);
+        }
+
+        if (troco > 0)
+        {
+            Txt(summaryBand, "Troco",                    0,        sy, w * 0.62f, MM(6), 9, FontStyle.Regular, HorzAlign.Left);
+            Txt(summaryBand, troco.ToString("C2", PtBR), w * 0.62f, sy, w * 0.38f, MM(6), 9, FontStyle.Regular, HorzAlign.Right);
+            sy += MM(7);
+        }
+
+        DuplaLinha(summaryBand, 0, sy, w); sy += MM(4);
+
+        Txt(summaryBand, "TOTAL",                            0,        sy, w * 0.5f, MM(10), 16, FontStyle.Bold, HorzAlign.Left);
+        Txt(summaryBand, pedido.Total.ToString("C2", PtBR),  w * 0.5f, sy, w * 0.5f, MM(10), 16, FontStyle.Bold, HorzAlign.Right);
+        sy += MM(13);
+
+        DuplaLinha(summaryBand, 0, sy, w); sy += MM(6);
+        Txt(summaryBand, "Obrigado pela preferência!", 0, sy, w, MM(5), 9, FontStyle.Bold, HorzAlign.Center);
+        sy += MM(8);
+
+        summaryBand.Height = sy;
+        page.ReportSummary = summaryBand;
+
+        // ── Gerar PDF e abrir preview (imprimir de lá na térmica) ──
+        ExportarPdf(report, $"ReciboTermico_{pedido.Numero:D5}", $"Recibo Térmico — Pedido #{pedido.Numero:D5}");
+    }
+
+    private static void DuplaLinha(BandBase band, float x, float y, float w)
+    {
+        band.Objects.Add(new LineObject { Bounds = new RectangleF(x, y,          w, 1) });
+        band.Objects.Add(new LineObject { Bounds = new RectangleF(x, y + MM(1f), w, 1) });
+    }
+
+    private static void LinhaPontilhada(BandBase band, float x, float y, float w)
+        => Linha(band, x, y, w);
+
+    // ═══════════════════════════════════════════════════════════════
     // Gera o PDF e abre o preview visual dentro do app (WebView2)
     // ═══════════════════════════════════════════════════════════════
     // RECIBO DE VENDA — A4 via RDLC
@@ -538,48 +705,48 @@ public class RelatorioService
                             (!string.IsNullOrWhiteSpace(empresa.Cep)
                                 ? "   CEP: " + empresa.Cep : "");
 
-        // DataTable: TipoLinha | Esquerda | Direita
-        // Inclui itens + footer (sem linhas estáticas no RDLC → sem ColSpan)
+        // DataTable simples: apenas Esquerda e Direita
+        // Separações visuais feitas com caracteres de texto
         var dt = new DataTable();
-        dt.Columns.Add("TipoLinha");
         dt.Columns.Add("Esquerda");
         dt.Columns.Add("Direita");
 
+        void Add(string esq, string dir = "") => dt.Rows.Add(esq, dir);
+        const string Sep = "─────────────────────────────────────────────────────────────────";
+
         // Itens do pedido
         foreach (var item in itens)
-            dt.Rows.Add(
-                "item",
+            Add(
                 $"{item.NomeProduto}   {item.Quantidade}×  {item.PrecoUnitario.ToString("C2", PtBR)}",
                 item.Subtotal.ToString("C2", PtBR));
 
-        // Footer: separador + total
-        dt.Rows.Add("sep_dark",  " ", " ");
-        dt.Rows.Add("total",     "TOTAL:", pedido.Total.ToString("C2", PtBR));
-        dt.Rows.Add("sep_light", " ", " ");
+        // Separador e total
+        Add(Sep);
+        Add("TOTAL:", pedido.Total.ToString("C2", PtBR));
+        Add(Sep);
 
-        // Formas de pagamento
-        var pagStr = string.Join("   |   ", pagamentos.Select(p =>
-            $"{FormatarFormaPagamento(p.Forma)}: {p.Valor.ToString("C2", PtBR)}"));
-        dt.Rows.Add("pagto_h", "FORMA DE PAGAMENTO", " ");
-        dt.Rows.Add("pagto_v", pagStr, " ");
+        // Pagamentos
+        Add("FORMA DE PAGAMENTO");
+        foreach (var pag in pagamentos)
+            Add(FormatarFormaPagamento(pag.Forma), pag.Valor.ToString("C2", PtBR));
 
         // Troco (apenas se houver)
         if (troco > 0)
-            dt.Rows.Add("pagto_v", $"Troco:  {troco.ToString("C2", PtBR)}", " ");
+            Add("Troco:", troco.ToString("C2", PtBR));
 
-        dt.Rows.Add("sep_light", " ", " ");
-        dt.Rows.Add("obrigado",  "Obrigado pela preferência!", " ");
+        Add(Sep);
+        Add("Obrigado pela preferência!");
 
         // Parâmetros do cabeçalho (Total/Pagamentos/Troco agora estão no DataTable)
         var parametros = new Dictionary<string, string>
         {
-            ["NomeEmpresa"]     = nomeEmp,
-            ["Telefone"]        = empresa.Telefone,
+            ["NomeEmpresa"]     = nomeEmp     ?? "",
+            ["Telefone"]        = empresa.Telefone ?? "",
             ["EnderecoEmpresa"] = endEmp,
             ["CidadeEmpresa"]   = cidadeEmp,
             ["NumeroPedido"]    = pedido.Numero.ToString("D5"),
             ["DataPedido"]      = pedido.Data.ToString("dd/MM/yyyy  HH:mm"),
-            ["Operador"]        = nomeOperador,
+            ["Operador"]        = nomeOperador ?? "",
         };
 
         var rdlcService = new RdlcRelatorioService();

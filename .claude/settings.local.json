@@ -32,7 +32,17 @@
       "Bash(cmd /c \"taskkill /PID 24192 /F\")",
       "Bash(cmd /c \"taskkill /IM PDV_CAIXA.exe /F 2>&1\")",
       "Bash(cmd /c \"dotnet build C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\PDV_CAIXA\\\\PDV_CAIXA.csproj 2>&1 | findstr /i \\\\\"erro compilacao sucesso error CS\\\\\"\")",
-      "Bash(cmd /c \"dotnet build C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\PDV_CAIXA\\\\PDV_CAIXA.csproj\" 2>&1)"
+      "Bash(cmd /c \"dotnet build C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\PDV_CAIXA\\\\PDV_CAIXA.csproj\" 2>&1)",
+      "Bash(dotnet script:*)",
+      "Bash(powershell -command \"cd ''C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA''; [System.Reflection.Assembly]::LoadFile\\(''PDV_CAIXA\\\\bin\\\\Debug\\\\net8.0-windows\\\\FastReport.OpenSource.dll''\\) | Out-Null; [FastReport.Report].GetMethods\\(\\) | Where-Object { $_.Name -like ''*Print*'' -or $_.Name -like ''*Show*'' } | Select-Object -ExpandProperty Name\")",
+      "Bash(powershell -command \"$dll = 'C:\\\\CSharp\\\\ProjetosEstudos\\\\PDV_CAIXA\\\\PDV_CAIXA\\\\bin\\\\Debug\\\\net8.0-windows\\\\FastReport.OpenSource.dll'; [System.Reflection.Assembly]::LoadFrom\\($dll\\) | Out-Null; [FastReport.Report].GetMethods\\(\\) | Where-Object { \\\\$_.Name -like '*Print*' -or \\\\$_.Name -like '*Show*' } | Select-Object -ExpandProperty Name\" 2>&1)",
+      "Bash(find C:CSharpProjetosEstudosPDV_CAIXA -name *.xml -path *FastReport*)",
+      "Bash(cmd /c \"taskkill /F /IM PDV_CAIXA.exe 2>&1\")",
+      "Bash(cmd /c \"taskkill /F /IM PDV_CAIXA.exe\" 2>&1)",
+      "Bash(cmd /c \"taskkill /PID 38140 /F && timeout /t 2 && dotnet build PDV_CAIXA/PDV_CAIXA.csproj -c Debug --no-restore\")",
+      "Bash(cmd /c \"taskkill /PID 23636 /F\" 2>&1)",
+      "Bash(cmd /c \"dotnet build PDV_CAIXA/PDV_CAIXA.csproj -c Debug 2>&1\")",
+      "Bash(cmd /c \"tasklist | findstr PDV_CAIXA\")"
     ]
   }
 }
