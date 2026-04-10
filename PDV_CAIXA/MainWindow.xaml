@@ -205,8 +205,10 @@
 
                 <!-- Itens de menu -->
                 <StackPanel DockPanel.Dock="Top" Margin="0,8,0,0">
-                    <TextBlock Text="MENU" FontSize="10"
-                               Foreground="#44475A" Margin="24,8,0,6"/>
+
+                    <!-- ── OPERAÇÃO ── -->
+                    <TextBlock Text="OPERAÇÃO" FontSize="9" FontWeight="Bold"
+                               Foreground="#44475A" Margin="24,10,0,4"/>
 
                     <Button x:Name="btnMenuInicio"
                             Content="🏠  Início"
@@ -214,14 +216,35 @@
                             Click="BtnMenuInicio_Click"/>
 
                     <Button x:Name="btnMenuPDV"
-                            Content="🛒  PDV"
+                            Content="🛒  PDV / Venda"
                             Style="{StaticResource MenuButton}"
                             Click="BtnMenuPDV_Click"/>
+
+                    <Button x:Name="btnMenuCaixa"
+                            Content="🏦  Caixa"
+                            Style="{StaticResource MenuButton}"
+                            Click="BtnMenuCaixa_Click"/>
+
+                    <!-- ── CADASTROS ── -->
+                    <Rectangle Height="1" Fill="#1C1C2E" Margin="12,8,12,0"/>
+                    <TextBlock Text="CADASTROS" FontSize="9" FontWeight="Bold"
+                               Foreground="#44475A" Margin="24,8,0,4"/>
 
                     <Button x:Name="btnMenuProdutos"
                             Content="📦  Produtos"
                             Style="{StaticResource MenuButton}"
                             Click="BtnMenuProdutos_Click"/>
+
+                    <Button x:Name="btnMenuUsuarios"
+                            Content="👥  Usuários"
+                            Style="{StaticResource MenuButton}"
+                            Visibility="Collapsed"
+                            Click="BtnMenuUsuarios_Click"/>
+
+                    <!-- ── MOVIMENTAÇÃO ── -->
+                    <Rectangle Height="1" Fill="#1C1C2E" Margin="12,8,12,0"/>
+                    <TextBlock Text="MOVIMENTAÇÃO" FontSize="9" FontWeight="Bold"
+                               Foreground="#44475A" Margin="24,8,0,4"/>
 
                     <Button x:Name="btnMenuHistorico"
                             Content="📋  Histórico"
@@ -233,16 +256,10 @@
                             Style="{StaticResource MenuButton}"
                             Click="BtnMenuPedidos_Click"/>
 
-                    <Button x:Name="btnMenuUsuarios"
-                            Content="👥  Usuários"
-                            Style="{StaticResource MenuButton}"
-                            Visibility="Collapsed"
-                            Click="BtnMenuUsuarios_Click"/>
-
-                    <Button x:Name="btnMenuCaixa"
-                            Content="🏦  Caixa"
-                            Style="{StaticResource MenuButton}"
-                            Click="BtnMenuCaixa_Click"/>
+                    <!-- ── RELATÓRIOS ── -->
+                    <Rectangle Height="1" Fill="#1C1C2E" Margin="12,8,12,0"/>
+                    <TextBlock Text="RELATÓRIOS" FontSize="9" FontWeight="Bold"
+                               Foreground="#44475A" Margin="24,8,0,4"/>
 
                     <Button x:Name="btnMenuRelatorios"
                             Content="📊  Relatórios"
@@ -254,12 +271,22 @@
                             Style="{StaticResource MenuButton}"
                             Click="BtnMenuConfigRelatorios_Click"/>
 
+                    <!-- ── CONFIGURAÇÕES ── -->
+                    <Rectangle Height="1" Fill="#1C1C2E" Margin="12,8,12,0"/>
+                    <TextBlock Text="CONFIGURAÇÕES" FontSize="9" FontWeight="Bold"
+                               Foreground="#44475A" Margin="24,8,0,4"/>
+
+                    <Button x:Name="btnMenuEmpresa"
+                            Content="🏢  Minha Empresa"
+                            Style="{StaticResource MenuButton}"
+                            Click="BtnMenuEmpresa_Click"/>
+
                     <Button x:Name="btnMenuFerramentas"
                             Content="🔧  Ferramentas"
                             Style="{StaticResource MenuButton}"
                             Click="BtnMenuFerramentas_Click"/>
 
-</StackPanel>
+                </StackPanel>
 
             </DockPanel>
         </Border>
@@ -4010,6 +4037,310 @@
                 </DataGrid.Columns>
             </DataGrid>
 
+        </Grid>
+
+        <!-- ══════════════ PÁGINA: MINHA EMPRESA ══════════════ -->
+        <Grid x:Name="pageEmpresa" Visibility="Collapsed" Background="#0A0A16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Cabeçalho -->
+            <Border Grid.Row="0" Padding="24,14" Background="#080812"
+                    BorderBrush="#14142A" BorderThickness="0,0,0,1">
+                <Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="MINHA EMPRESA" Foreground="#44446A" FontSize="10" FontWeight="Bold"/>
+                        <TextBlock Text="Cadastro da empresa que opera o PDV"
+                                   Foreground="#D0D0E0" FontSize="16" FontWeight="Bold" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" Height="36" Padding="20,0"
+                            FontSize="12" FontWeight="SemiBold"
+                            Cursor="Hand" Click="BtnEmpresaSalvar_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="#7C83FF" CornerRadius="8">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                      Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#6970E0"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#555BC4"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💾" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Salvar" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+            <Rectangle Grid.Row="1" Height="1" Fill="#14142A"/>
+
+            <!-- Conteúdo -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="28,24,28,24">
+
+                    <!-- ── Dados da Empresa ── -->
+                    <Border Background="#0C0C1A" BorderBrush="#1C1C2E" BorderThickness="1"
+                            CornerRadius="10" Padding="22,18" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="🏢  DADOS DA EMPRESA" Foreground="#44446A"
+                                       FontSize="10" FontWeight="Bold" Margin="0,0,0,16"/>
+
+                            <!-- Razão Social -->
+                            <TextBlock Text="RAZÃO SOCIAL" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="empEdtRazaoSocial" Height="36" FontSize="13" Padding="10,0"
+                                     Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                     BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center"
+                                     Margin="0,0,0,12">
+                                <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                    <Trigger Property="IsFocused" Value="True">
+                                        <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                    </Trigger>
+                                </Style.Triggers></Style></TextBox.Style>
+                            </TextBox>
+
+                            <!-- Nome Fantasia -->
+                            <TextBlock Text="NOME FANTASIA" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="empEdtNomeFantasia" Height="36" FontSize="13" Padding="10,0"
+                                     Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                     BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center"
+                                     Margin="0,0,0,12">
+                                <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                    <Trigger Property="IsFocused" Value="True">
+                                        <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                    </Trigger>
+                                </Style.Triggers></Style></TextBox.Style>
+                            </TextBox>
+
+                            <!-- CNPJ + IE -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="CNPJ" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtCnpj" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="INSCRIÇÃO ESTADUAL" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtInscricaoEst" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Telefone + Email -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="TELEFONE" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtTelefone" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="E-MAIL" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtEmail" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Website -->
+                            <TextBlock Text="WEBSITE" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="empEdtWebsite" Height="36" FontSize="13" Padding="10,0"
+                                     Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                     BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                    <Trigger Property="IsFocused" Value="True">
+                                        <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                    </Trigger>
+                                </Style.Triggers></Style></TextBox.Style>
+                            </TextBox>
+
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── Endereço ── -->
+                    <Border Background="#0C0C1A" BorderBrush="#1C1C2E" BorderThickness="1"
+                            CornerRadius="10" Padding="22,18" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="📍  ENDEREÇO" Foreground="#44446A"
+                                       FontSize="10" FontWeight="Bold" Margin="0,0,0,16"/>
+
+                            <!-- CEP + Número -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="CEP" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtCep" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="NÚMERO" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtNumero" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Logradouro -->
+                            <TextBlock Text="LOGRADOURO" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                            <TextBox x:Name="empEdtLogradouro" Height="36" FontSize="13" Padding="10,0"
+                                     Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                     BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center"
+                                     Margin="0,0,0,12">
+                                <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                    <Trigger Property="IsFocused" Value="True">
+                                        <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                    </Trigger>
+                                </Style.Triggers></Style></TextBox.Style>
+                            </TextBox>
+
+                            <!-- Complemento + Bairro -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="COMPLEMENTO" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtComplemento" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="BAIRRO" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtBairro" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Cidade + UF -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="CIDADE" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtCidade" Height="36" FontSize="13" Padding="10,0"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="UF" Foreground="#44446A" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                                    <TextBox x:Name="empEdtUf" Height="36" FontSize="13" Padding="10,0"
+                                             MaxLength="2" CharacterCasing="Upper"
+                                             Background="#151528" Foreground="#E0E0E0" CaretBrush="#7C83FF"
+                                             BorderBrush="#2A2A4A" BorderThickness="1.5" VerticalContentAlignment="Center">
+                                        <TextBox.Style><Style TargetType="TextBox"><Style.Triggers>
+                                            <Trigger Property="IsFocused" Value="True">
+                                                <Setter Property="BorderBrush" Value="#7C83FF"/>
+                                            </Trigger>
+                                        </Style.Triggers></Style></TextBox.Style>
+                                    </TextBox>
+                                </StackPanel>
+                            </Grid>
+
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Banner de feedback -->
+                    <Border x:Name="empBannerSucesso" Background="#0D2A1A" BorderBrush="#1A4A2A"
+                            BorderThickness="1" CornerRadius="8" Padding="16,10"
+                            Margin="0,0,0,8" Visibility="Collapsed">
+                        <TextBlock Text="✔  Dados salvos com sucesso!"
+                                   Foreground="#4ADE80" FontSize="13" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border x:Name="empBannerErro" Background="#2A0D0D" BorderBrush="#4A1A1A"
+                            BorderThickness="1" CornerRadius="8" Padding="16,10"
+                            Margin="0,0,0,8" Visibility="Collapsed">
+                        <TextBlock x:Name="empTxtErro" Foreground="#FF6B6B" FontSize="13"
+                                   TextWrapping="Wrap"/>
+                    </Border>
+
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
 
         </Grid>

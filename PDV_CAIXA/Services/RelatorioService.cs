@@ -1,6 +1,7 @@
 using System.Data;
 using System.Drawing;
 using System.IO;
+using Dapper;
 using FastReport;
 using FastReport.Export.PdfSimple;
 using FastReport.Utils;
@@ -470,7 +471,137 @@ public class RelatorioService
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // RELATÓRIO DE PRODUTOS ATIVOS — A4 via RDLC (VIEW vw_produtos_ativos)
+    // ═══════════════════════════════════════════════════════════════
+    public void GerarRelatorioProdutosAtivos(string nomeArquivo = "RelatorioProdutosAtivos.rdlc")
+    {
+        var conexao = new Data.Conexao();
+        using var conn = conexao.CriarConexao();
+        var rows = conn.Query("SELECT nome, codigo_barras, preco, desconto, estoque FROM vw_produtos_ativos").ToList();
+
+        var dt = new System.Data.DataTable();
+        dt.Columns.Add("Nome");
+        dt.Columns.Add("CodigoBarras");
+        dt.Columns.Add("Preco");
+        dt.Columns.Add("Desconto");
+        dt.Columns.Add("Estoque");
+        foreach (var r in rows)
+            dt.Rows.Add(
+                (string)r.nome,
+                (string)r.codigo_barras,
+                ((decimal)r.preco).ToString("C2", PtBR),
+                ((decimal)r.desconto) > 0 ? $"{(decimal)r.desconto:F0}%" : "—",
+                ((int)r.estoque).ToString());
+
+        var parametros = new Dictionary<string, string>
+        {
+            ["DataGeracao"]   = $"Gerado em {DateTime.Now:dd/MM/yyyy} às {DateTime.Now:HH:mm}",
+            ["TotalProdutos"] = dt.Rows.Count.ToString()
+        };
+
+        var rdlcService = new RdlcRelatorioService();
+        var pdfBytes    = rdlcService.GerarPdfBytes(nomeArquivo, "DataSetProdutosAtivos", dt, parametros);
+        var nomePdf     = Path.GetFileNameWithoutExtension(nomeArquivo);
+
+        var pasta = PastaRelatorios();
+        Directory.CreateDirectory(pasta);
+        var caminho = Path.Combine(pasta, $"{nomePdf}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        File.WriteAllBytes(caminho, pdfBytes);
+
+        var preview = new PDV_CAIXA.Views.RelatorioPreviewWindow("Produtos Ativos", caminho);
+        preview.Show();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // Gera o PDF e abre o preview visual dentro do app (WebView2)
+    // ═══════════════════════════════════════════════════════════════
+    // RECIBO DE VENDA — A4 via RDLC
+    // ═══════════════════════════════════════════════════════════════
+    public void GerarReciboPedido(
+        Pedido pedido,
+        List<PedidoItem> itens,
+        List<PagamentoCupom> pagamentos,
+        decimal troco,
+        string nomeOperador,
+        string nomeArquivo = "ReciboPedido.rdlc")
+    {
+        // Dados da empresa
+        var empresa   = new Repositories.EmpresaRepository().Obter();
+        var nomeEmp   = !string.IsNullOrWhiteSpace(empresa.NomeFantasia)
+                            ? empresa.NomeFantasia : empresa.RazaoSocial;
+        var endEmp    = string.IsNullOrWhiteSpace(empresa.Logradouro) ? "" :
+                            empresa.Logradouro + ", " + empresa.Numero +
+                            (!string.IsNullOrWhiteSpace(empresa.Complemento)
+                                ? " — " + empresa.Complemento : "");
+        var cidadeEmp = string.IsNullOrWhiteSpace(empresa.Cidade) ? "" :
+                            empresa.Cidade + " — " + empresa.Uf +
+                            (!string.IsNullOrWhiteSpace(empresa.Cep)
+                                ? "   CEP: " + empresa.Cep : "");
+
+        // DataTable: TipoLinha | Esquerda | Direita
+        // Inclui itens + footer (sem linhas estáticas no RDLC → sem ColSpan)
+        var dt = new DataTable();
+        dt.Columns.Add("TipoLinha");
+        dt.Columns.Add("Esquerda");
+        dt.Columns.Add("Direita");
+
+        // Itens do pedido
+        foreach (var item in itens)
+            dt.Rows.Add(
+                "item",
+                $"{item.NomeProduto}   {item.Quantidade}×  {item.PrecoUnitario.ToString("C2", PtBR)}",
+                item.Subtotal.ToString("C2", PtBR));
+
+        // Footer: separador + total
+        dt.Rows.Add("sep_dark",  " ", " ");
+        dt.Rows.Add("total",     "TOTAL:", pedido.Total.ToString("C2", PtBR));
+        dt.Rows.Add("sep_light", " ", " ");
+
+        // Formas de pagamento
+        var pagStr = string.Join("   |   ", pagamentos.Select(p =>
+            $"{FormatarFormaPagamento(p.Forma)}: {p.Valor.ToString("C2", PtBR)}"));
+        dt.Rows.Add("pagto_h", "FORMA DE PAGAMENTO", " ");
+        dt.Rows.Add("pagto_v", pagStr, " ");
+
+        // Troco (apenas se houver)
+        if (troco > 0)
+            dt.Rows.Add("pagto_v", $"Troco:  {troco.ToString("C2", PtBR)}", " ");
+
+        dt.Rows.Add("sep_light", " ", " ");
+        dt.Rows.Add("obrigado",  "Obrigado pela preferência!", " ");
+
+        // Parâmetros do cabeçalho (Total/Pagamentos/Troco agora estão no DataTable)
+        var parametros = new Dictionary<string, string>
+        {
+            ["NomeEmpresa"]     = nomeEmp,
+            ["Telefone"]        = empresa.Telefone,
+            ["EnderecoEmpresa"] = endEmp,
+            ["CidadeEmpresa"]   = cidadeEmp,
+            ["NumeroPedido"]    = pedido.Numero.ToString("D5"),
+            ["DataPedido"]      = pedido.Data.ToString("dd/MM/yyyy  HH:mm"),
+            ["Operador"]        = nomeOperador,
+        };
+
+        var rdlcService = new RdlcRelatorioService();
+        var pdfBytes    = rdlcService.GerarPdfBytes(nomeArquivo, "DataSetItens", dt, parametros);
+
+        var pasta = PastaRelatorios();
+        Directory.CreateDirectory(pasta);
+        var caminho = Path.Combine(pasta, $"Recibo_{pedido.Numero:D5}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+        File.WriteAllBytes(caminho, pdfBytes);
+
+        var preview = new PDV_CAIXA.Views.RelatorioPreviewWindow("Recibo de Venda", caminho);
+        preview.Show();
+    }
+
+    private static string FormatarFormaPagamento(string forma) => forma switch {
+        "dinheiro" => "Dinheiro",
+        "credito"  => "Cartão Crédito",
+        "debito"   => "Cartão Débito",
+        "pix"      => "PIX",
+        _          => forma
+    };
+
     // ═══════════════════════════════════════════════════════════════
     // ═══════════════════════════════════════════════════════════════
     // TESTE DE IMPRESSÃO

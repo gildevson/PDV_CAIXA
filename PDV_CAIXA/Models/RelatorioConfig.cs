@@ -10,9 +10,10 @@ namespace PDV_CAIXA.Models {
 
         public string AtivoTexto => Ativo ? "Sim" : "Não";
         public string TipoLabel  => Tipo switch {
-            "Produtos" => "Produtos Cadastrados",
-            "Usuarios" => "Usuários Cadastrados",
-            _          => Tipo
+            "Produtos"       => "Produtos Cadastrados",
+            "Usuarios"       => "Usuários Cadastrados",
+            "ProdutosAtivos" => "Produtos Ativos",
+            _                => Tipo
         };
     }
 }

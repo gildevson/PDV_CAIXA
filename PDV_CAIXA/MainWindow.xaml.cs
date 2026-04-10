@@ -160,6 +160,7 @@ namespace PDV_CAIXA {
             pageCaixa.Visibility        = Visibility.Collapsed;
             pageRelatorios.Visibility       = Visibility.Collapsed;
             pageConfigRelatorios.Visibility = Visibility.Collapsed;
+            pageEmpresa.Visibility          = Visibility.Collapsed;
             pageFerramentas.Visibility      = Visibility.Collapsed;
             pagina.Visibility           = Visibility.Visible;
         }
@@ -173,6 +174,7 @@ namespace PDV_CAIXA {
             btnMenuHistorico.Style   = (Style)FindResource("MenuButton");
             btnMenuCaixa.Style        = (Style)FindResource("MenuButton");
             btnMenuRelatorios.Style   = (Style)FindResource("MenuButton");
+            btnMenuEmpresa.Style      = (Style)FindResource("MenuButton");
             btnMenuFerramentas.Style  = (Style)FindResource("MenuButton");
         }
 
@@ -687,12 +689,17 @@ namespace PDV_CAIXA {
                 var printResult = MessageBox.Show(printMsg, "Sucesso",
                     MessageBoxButton.YesNo, MessageBoxImage.Information);
 
+                var itensPedido = _pedidoRepository.ObterItens(pedido.Id).ToList();
+                var pagsPedido  = janela.Pagamentos.Select(p => new PagamentoCupom(p.Forma, p.Valor)).ToList();
+
                 if (printResult == MessageBoxResult.Yes)
-                {
-                    var itensCupom   = _pedidoRepository.ObterItens(pedido.Id).ToList();
-                    var pagsCupom    = janela.Pagamentos.Select(p => new PagamentoCupom(p.Forma, p.Valor)).ToList();
-                    _relatorioService.ImprimirCupomVenda(pedido, itensCupom, pagsCupom, janela.Troco, _usuarioLogado.Nome);
-                }
+                    _relatorioService.ImprimirCupomVenda(pedido, itensPedido, pagsPedido, janela.Troco, _usuarioLogado.Nome);
+
+                var reciboResult = MessageBox.Show(
+                    "Deseja gerar o Recibo de Venda (PDF A4)?",
+                    "Recibo", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (reciboResult == MessageBoxResult.Yes)
+                    _relatorioService.GerarReciboPedido(pedido, itensPedido, pagsPedido, janela.Troco, _usuarioLogado.Nome);
             } catch (Exception ex) {
                 MessageBox.Show("Erro ao finalizar pedido:\n\n" + ex.Message,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -926,6 +933,9 @@ namespace PDV_CAIXA {
                         var produtos = new Repositories.ProdutoRepository().ObterTodos().ToList();
                         _relatorioService.GerarRelatorioProdutos(produtos, config.NomeArquivo);
                         break;
+                    case "ProdutosAtivos":
+                        _relatorioService.GerarRelatorioProdutosAtivos(config.NomeArquivo);
+                        break;
                     default:
                         MessageBox.Show($"Tipo '{config.Tipo}' não possui gerador configurado.",
                             "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -1064,6 +1074,82 @@ namespace PDV_CAIXA {
             var titulo = System.IO.Path.GetFileNameWithoutExtension(caminho);
             var preview = new Views.RelatorioPreviewWindow(titulo, caminho);
             preview.Show();
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ── MINHA EMPRESA ────────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+
+        private void BtnMenuEmpresa_Click(object sender, RoutedEventArgs e) {
+            MostrarPagina(pageEmpresa);
+            ResetarMenus();
+            btnMenuEmpresa.Style = (Style)FindResource("MenuButtonActive");
+            EmpresaCarregar();
+        }
+
+        private void EmpresaCarregar() {
+            try {
+                var emp = new Repositories.EmpresaRepository().Obter();
+                empEdtRazaoSocial.Text   = emp.RazaoSocial;
+                empEdtNomeFantasia.Text  = emp.NomeFantasia;
+                empEdtCnpj.Text         = emp.Cnpj;
+                empEdtInscricaoEst.Text  = emp.InscricaoEst;
+                empEdtTelefone.Text      = emp.Telefone;
+                empEdtEmail.Text         = emp.Email;
+                empEdtWebsite.Text       = emp.Website;
+                empEdtCep.Text           = emp.Cep;
+                empEdtLogradouro.Text    = emp.Logradouro;
+                empEdtNumero.Text        = emp.Numero;
+                empEdtComplemento.Text   = emp.Complemento;
+                empEdtBairro.Text        = emp.Bairro;
+                empEdtCidade.Text        = emp.Cidade;
+                empEdtUf.Text            = emp.Uf;
+                empBannerSucesso.Visibility = Visibility.Collapsed;
+                empBannerErro.Visibility    = Visibility.Collapsed;
+            } catch (Exception ex) {
+                empBannerErro.Visibility = Visibility.Visible;
+                empTxtErro.Text = "Erro ao carregar dados: " + ex.Message;
+            }
+        }
+
+        private void BtnEmpresaSalvar_Click(object sender, RoutedEventArgs e) {
+            empBannerSucesso.Visibility = Visibility.Collapsed;
+            empBannerErro.Visibility    = Visibility.Collapsed;
+
+            if (string.IsNullOrWhiteSpace(empEdtRazaoSocial.Text)) {
+                empBannerErro.Visibility = Visibility.Visible;
+                empTxtErro.Text = "Razão Social é obrigatória.";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(empEdtCnpj.Text)) {
+                empBannerErro.Visibility = Visibility.Visible;
+                empTxtErro.Text = "CNPJ é obrigatório.";
+                return;
+            }
+
+            try {
+                var emp = new Repositories.EmpresaRepository().Obter();
+                emp.RazaoSocial  = empEdtRazaoSocial.Text.Trim();
+                emp.NomeFantasia = empEdtNomeFantasia.Text.Trim();
+                emp.Cnpj         = empEdtCnpj.Text.Trim();
+                emp.InscricaoEst = empEdtInscricaoEst.Text.Trim();
+                emp.Telefone     = empEdtTelefone.Text.Trim();
+                emp.Email        = empEdtEmail.Text.Trim();
+                emp.Website      = empEdtWebsite.Text.Trim();
+                emp.Cep          = empEdtCep.Text.Trim();
+                emp.Logradouro   = empEdtLogradouro.Text.Trim();
+                emp.Numero       = empEdtNumero.Text.Trim();
+                emp.Complemento  = empEdtComplemento.Text.Trim();
+                emp.Bairro       = empEdtBairro.Text.Trim();
+                emp.Cidade       = empEdtCidade.Text.Trim();
+                emp.Uf           = empEdtUf.Text.Trim().ToUpper();
+
+                new Repositories.EmpresaRepository().Salvar(emp);
+                empBannerSucesso.Visibility = Visibility.Visible;
+            } catch (Exception ex) {
+                empBannerErro.Visibility = Visibility.Visible;
+                empTxtErro.Text = "Erro ao salvar: " + ex.Message;
+            }
         }
 
         // ════════════════════════════════════════════════════════════

@@ -194,6 +194,7 @@
                         </ComboBox.ItemContainerStyle>
                         <ComboBoxItem Content="Produtos Cadastrados" Tag="Produtos"/>
                         <ComboBoxItem Content="Usuários Cadastrados"  Tag="Usuarios"/>
+                        <ComboBoxItem Content="Produtos Ativos"       Tag="ProdutosAtivos"/>
                     </ComboBox>
                 </Border>
                 <TextBlock x:Name="txtErroTipo" Foreground="#FF6B6B" FontSize="11"
