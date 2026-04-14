@@ -35,12 +35,13 @@ public class RelatorioService
         var page   = new ReportPage();
         report.Pages.Add(page);
 
-        page.PaperWidth  = 80;
-        page.PaperHeight = 297;
-        page.LeftMargin  = 4;
-        page.RightMargin = 4;
-        page.TopMargin   = 5;
-        page.BottomMargin = 5;
+        page.PaperWidth      = 80;
+        page.PaperHeight     = 297;
+        page.UnlimitedHeight = true;
+        page.LeftMargin      = 4;
+        page.RightMargin     = 4;
+        page.TopMargin       = 5;
+        page.BottomMargin    = 5;
 
         float w    = MM(page.PaperWidth - page.LeftMargin - page.RightMargin); // ~72mm
         float col1 = w * 0.55f;   // produto
@@ -292,108 +293,147 @@ public class RelatorioService
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // HISTÓRICO DE PEDIDO — A4
+    // HISTÓRICO DE PEDIDO — 80mm (bobina térmica)
     // ═══════════════════════════════════════════════════════════════
     public void ImprimirHistoricoPedido(
         PedidoResumoViewModel pedido,
         IEnumerable<PedidoItem> itens)
     {
+        var listaItens = itens.ToList();
+        var empresa    = new Repositories.EmpresaRepository().Obter();
+        var nomeEmp    = !string.IsNullOrWhiteSpace(empresa.NomeFantasia)
+                             ? empresa.NomeFantasia : empresa.RazaoSocial;
+
         var report = new Report();
         var page   = new ReportPage();
         report.Pages.Add(page);
 
-        page.PaperWidth   = 210;
-        page.PaperHeight  = 297;
-        page.LeftMargin   = 15;
-        page.RightMargin  = 15;
-        page.TopMargin    = 15;
-        page.BottomMargin = 15;
+        page.PaperWidth      = 80;
+        page.PaperHeight     = 297;
+        page.UnlimitedHeight = true;
+        page.LeftMargin      = 3;
+        page.RightMargin     = 3;
+        page.TopMargin       = 4;
+        page.BottomMargin    = 4;
 
-        float w = MM(page.PaperWidth - page.LeftMargin - page.RightMargin);
+        float w     = MM(page.PaperWidth - page.LeftMargin - page.RightMargin);
+        float cDesc = w * 0.50f;
+        float cQtdU = w * 0.28f;
+        float cVal  = w * 0.22f;
+        float cLbl  = w * 0.65f;
+        float cNum  = w * 0.35f;
 
-        // ── Registrar itens ────────────────────────────────────────
-        var ds = new DataSet();
-        var dt = new DataTable("Itens");
-        dt.Columns.Add("Produto");
-        dt.Columns.Add("Qtd");
-        dt.Columns.Add("Unitario");
-        dt.Columns.Add("Subtotal");
-        foreach (var item in itens)
-            dt.Rows.Add(
-                item.NomeProduto,
-                item.Quantidade.ToString(),
-                item.PrecoUnitario.ToString("C2", PtBR),
-                item.Subtotal.ToString("C2", PtBR));
-        ds.Tables.Add(dt);
-        report.RegisterData(ds);
+        // ── TUDO em uma única band (evita bug do DataBand no PDF) ──
+        var band = new ReportTitleBand();
+        float y  = 0;
 
-        // ── BAND: Cabeçalho ────────────────────────────────────────
-        var title = new ReportTitleBand();
-        float ty = 0;
+        // Empresa
+        if (!string.IsNullOrWhiteSpace(nomeEmp))
+        { Txt(band, nomeEmp.ToUpper(), 0, y, w, MM(8), 11, FontStyle.Bold, HorzAlign.Center); y += MM(10); }
 
-        Txt(title, "PDV CAIXA", 0, ty, w * 0.5f, MM(10), 16, FontStyle.Bold, HorzAlign.Left);
-        Txt(title, "COMPROVANTE DE PEDIDO", w * 0.5f, ty, w * 0.5f, MM(10), 12, FontStyle.Bold, HorzAlign.Right);
-        ty += MM(12);
-        Linha(title, 0, ty, w); ty += MM(6);
+        if (!string.IsNullOrWhiteSpace(empresa.RazaoSocial) && empresa.RazaoSocial != nomeEmp)
+        { Txt(band, empresa.RazaoSocial, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center, true); y += MM(6); }
 
-        // Info do pedido em dois blocos lado a lado
-        float col = w / 2;
-        Txt(title, $"Pedido:      {pedido.NumeroTexto}",        0,   ty, col, MM(6), 10, FontStyle.Regular, HorzAlign.Left);
-        Txt(title, $"Data:        {pedido.DataTexto}",          col, ty, col, MM(6), 10, FontStyle.Regular, HorzAlign.Left);
-        ty += MM(7);
-        Txt(title, $"Operador:    {pedido.Operador}",           0,   ty, col, MM(6), 10, FontStyle.Regular, HorzAlign.Left);
-        Txt(title, $"Pagamento:   {pedido.PagamentoTexto}",     col, ty, col, MM(6), 10, FontStyle.Regular, HorzAlign.Left);
-        ty += MM(7);
+        var endEmp = string.IsNullOrWhiteSpace(empresa.Logradouro) ? "" :
+                     empresa.Logradouro + ", " + empresa.Numero +
+                     (!string.IsNullOrWhiteSpace(empresa.Complemento) ? " - " + empresa.Complemento : "");
+        if (!string.IsNullOrWhiteSpace(endEmp))
+        { Txt(band, endEmp, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center, true); y += MM(6); }
 
-        var statusLabel = pedido.Status == "finalizado" ? "✓ FINALIZADO" : "✗ CANCELADO";
-        Txt(title, $"Status:      {statusLabel}",               0,   ty, col, MM(6), 10, FontStyle.Bold,    HorzAlign.Left);
-        ty += MM(10);
-        Linha(title, 0, ty, w); ty += MM(8);
+        var bairro   = !string.IsNullOrWhiteSpace(empresa.Bairro) ? empresa.Bairro + " - " : "";
+        var cidadeUf = string.IsNullOrWhiteSpace(empresa.Cidade) ? "" :
+                       bairro + empresa.Cidade + " - " + empresa.Uf +
+                       (!string.IsNullOrWhiteSpace(empresa.Cep) ? "  CEP: " + empresa.Cep : "");
+        if (!string.IsNullOrWhiteSpace(cidadeUf))
+        { Txt(band, cidadeUf, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center); y += MM(6); }
 
-        // Cabeçalho da tabela de itens
-        float c1 = w * 0.50f;
-        float c2 = w * 0.10f;
-        float c3 = w * 0.20f;
-        float c4 = w * 0.20f;
+        if (!string.IsNullOrWhiteSpace(empresa.Telefone))
+        { Txt(band, empresa.Telefone, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center); y += MM(6); }
 
-        Txt(title, "PRODUTO",     0,          ty, c1, MM(6), 10, FontStyle.Bold, HorzAlign.Left);
-        Txt(title, "QTD",         c1,          ty, c2, MM(6), 10, FontStyle.Bold, HorzAlign.Center);
-        Txt(title, "UNIT.",       c1+c2,       ty, c3, MM(6), 10, FontStyle.Bold, HorzAlign.Right);
-        Txt(title, "SUBTOTAL",    c1+c2+c3,    ty, c4, MM(6), 10, FontStyle.Bold, HorzAlign.Right);
-        ty += MM(6);
-        Linha(title, 0, ty, w); ty += MM(2);
+        Linha(band, 0, y, w); y += MM(4);
 
-        title.Height = ty;
-        page.ReportTitle = title;
+        var cnpjStr = !string.IsNullOrWhiteSpace(empresa.Cnpj) ? $"CNPJ: {empresa.Cnpj}" : "";
+        var ieStr   = !string.IsNullOrWhiteSpace(empresa.InscricaoEst) ? $"IE: {empresa.InscricaoEst}" : "";
+        if (!string.IsNullOrWhiteSpace(cnpjStr) || !string.IsNullOrWhiteSpace(ieStr))
+        {
+            Txt(band, cnpjStr, 0,         y, w * 0.55f, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+            Txt(band, ieStr,   w * 0.55f,  y, w * 0.45f, MM(5), 7, FontStyle.Regular, HorzAlign.Right);
+            y += MM(6);
+        }
 
-        // ── BAND: Itens ────────────────────────────────────────────
-        var dataBand = new DataBand();
-        dataBand.DataSource = report.GetDataSource("Itens");
-        dataBand.Height     = MM(8);
+        Linha(band, 0, y, w); y += MM(4);
+        Txt(band, "CLIENTE: CONSUMIDOR FINAL", 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Left); y += MM(6);
+        Linha(band, 0, y, w); y += MM(4);
 
-        Txt(dataBand, "[Itens.Produto]",  0,        0, c1, dataBand.Height, 10, FontStyle.Regular, HorzAlign.Left,  true);
-        Txt(dataBand, "[Itens.Qtd]",      c1,        0, c2, dataBand.Height, 10, FontStyle.Regular, HorzAlign.Center);
-        Txt(dataBand, "[Itens.Unitario]", c1+c2,     0, c3, dataBand.Height, 10, FontStyle.Regular, HorzAlign.Right);
-        Txt(dataBand, "[Itens.Subtotal]", c1+c2+c3,  0, c4, dataBand.Height, 10, FontStyle.Bold,    HorzAlign.Right);
-        page.Bands.Add(dataBand);
+        Txt(band, pedido.Data.ToString("dd/MM/yyyy  HH:mm", PtBR), 0, y, w * 0.50f, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+        Txt(band, "COMPROVANTE DE VENDA", w * 0.50f, y, w * 0.50f, MM(4), 6, FontStyle.Regular, HorzAlign.Right);
+        y += MM(5);
+        Txt(band, $"Nº {pedido.Numero:D6}", w * 0.50f, y, w * 0.50f, MM(6), 11, FontStyle.Bold, HorzAlign.Right);
+        y += MM(8);
 
-        // ── BAND: Rodapé com total ─────────────────────────────────
-        var summary = new ReportSummaryBand();
-        float sy = MM(4);
-        Linha(summary, 0, sy, w); sy += MM(4);
+        DuplaLinha(band, 0, y, w); y += MM(4);
 
-        Txt(summary, "TOTAL DO PEDIDO",                     0,   sy, w * 0.7f, MM(9), 13, FontStyle.Bold, HorzAlign.Left);
-        Txt(summary, pedido.Total.ToString("C2", PtBR),     w * 0.7f, sy, w * 0.3f, MM(9), 13, FontStyle.Bold, HorzAlign.Right);
-        sy += MM(11);
-        Linha(summary, 0, sy, w); sy += MM(4);
+        // Cabeçalho das colunas
+        Txt(band, "DESCRIÇÃO",  0,            y, cDesc, MM(4), 7, FontStyle.Bold, HorzAlign.Left);
+        Txt(band, "QTD x UNIT", cDesc,         y, cQtdU, MM(4), 7, FontStyle.Bold, HorzAlign.Center);
+        Txt(band, "R$ VALOR",   cDesc + cQtdU, y, cVal,  MM(4), 7, FontStyle.Bold, HorzAlign.Right);
+        y += MM(4);
+        Linha(band, 0, y, w); y += MM(2);
 
-        Txt(summary, $"Gerado em {DateTime.Now:dd/MM/yyyy HH:mm}", 0, sy, w, MM(5), 8, FontStyle.Regular, HorzAlign.Right);
-        sy += MM(8);
+        // ── ITENS (loop direto, sem DataBand) ──────────────────────
+        foreach (var item in listaItens)
+        {
+            Txt(band, item.NomeProduto,
+                0, y, cDesc, MM(7), 7, FontStyle.Regular, HorzAlign.Left, wordWrap: true);
+            Txt(band, $"{item.Quantidade}x @ {item.PrecoUnitario.ToString("N2", PtBR)}",
+                cDesc, y, cQtdU, MM(7), 7, FontStyle.Regular, HorzAlign.Center, wordWrap: true);
+            Txt(band, item.Subtotal.ToString("C2", PtBR),
+                cDesc + cQtdU, y, cVal, MM(7), 7, FontStyle.Bold, HorzAlign.Right);
+            y += MM(7);
+        }
 
-        summary.Height = sy;
-        page.ReportSummary = summary;
+        // ── TOTAIS ─────────────────────────────────────────────────
+        Linha(band, 0, y, w); y += MM(4);
 
-        ExportarPdf(report, $"Pedido_{pedido.Numero:D4}", $"Pedido {pedido.NumeroTexto} — {pedido.DataTexto}");
+        Txt(band, "Total da Nota R$", 0,    y, cLbl, MM(6), 9, FontStyle.Regular, HorzAlign.Left);
+        Txt(band, pedido.Total.ToString("N2", PtBR), cLbl, y, cNum, MM(6), 9, FontStyle.Regular, HorzAlign.Right);
+        y += MM(7);
+
+        Linha(band, 0, y, w); y += MM(4);
+
+        Txt(band, $"FORMA DE PGTO.: {pedido.PagamentoTexto}", 0, y, w, MM(5), 7, FontStyle.Bold, HorzAlign.Left);
+        y += MM(6);
+
+        Txt(band, pedido.Data.ToString("dd/MM/yy", PtBR), 0,        y, w * 0.30f, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+        Txt(band, pedido.Total.ToString("N2", PtBR),      w * 0.30f, y, w * 0.33f, MM(5), 7, FontStyle.Regular, HorzAlign.Center);
+        Txt(band, pedido.PagamentoTexto,                  w * 0.63f, y, w * 0.37f, MM(5), 7, FontStyle.Regular, HorzAlign.Right);
+        y += MM(6);
+
+        Linha(band, 0, y, w); y += MM(4);
+
+        Txt(band, $"VENDEDOR(A): {pedido.Operador}", 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+        y += MM(9);
+
+        Linha(band, 0, y, w); y += MM(7);
+
+        Txt(band, "Recebi a(s) mercadoria(s) acima descrita(s), concordando plenamente com os prazos e condições de garantia.",
+            0, y, w, MM(12), 7, FontStyle.Regular, HorzAlign.Left, wordWrap: true);
+        y += MM(18);
+
+        Txt(band, new string('-', 42), 0, y, w, MM(4), 7, FontStyle.Regular, HorzAlign.Center);
+        y += MM(5);
+        Txt(band, "ASSINATURA DO CLIENTE", 0, y, w, MM(4), 7, FontStyle.Regular, HorzAlign.Center);
+        y += MM(7);
+
+        Linha(band, 0, y, w); y += MM(5);
+
+        Txt(band, "* OBRIGADO E VOLTE SEMPRE *", 0, y, w, MM(6), 9, FontStyle.Bold, HorzAlign.Center);
+        y += MM(10);
+
+        band.Height = y;
+        page.ReportTitle = band;
+
+        ExportarPdf(report, $"Recibo_{pedido.Numero:D5}", $"Comprovante de Venda — Pedido #{pedido.Numero:D5}");
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -530,12 +570,13 @@ public class RelatorioService
         var page   = new ReportPage();
         report.Pages.Add(page);
 
-        page.PaperWidth   = 80;
-        page.PaperHeight  = 297;
-        page.LeftMargin   = 3;
-        page.RightMargin  = 3;
-        page.TopMargin    = 4;
-        page.BottomMargin = 4;
+        page.PaperWidth      = 80;
+        page.PaperHeight     = 297;
+        page.UnlimitedHeight = true;
+        page.LeftMargin      = 3;
+        page.RightMargin     = 3;
+        page.TopMargin       = 4;
+        page.BottomMargin    = 4;
 
         float w = MM(page.PaperWidth - page.LeftMargin - page.RightMargin); // ~74mm
 
@@ -682,7 +723,7 @@ public class RelatorioService
     // ═══════════════════════════════════════════════════════════════
     // Gera o PDF e abre o preview visual dentro do app (WebView2)
     // ═══════════════════════════════════════════════════════════════
-    // RECIBO DE VENDA — A4 via RDLC
+    // RECIBO DE VENDA — A4 via FastReport (layout comprovante)
     // ═══════════════════════════════════════════════════════════════
     public void GerarReciboPedido(
         Pedido pedido,
@@ -692,73 +733,160 @@ public class RelatorioService
         string nomeOperador,
         string nomeArquivo = "ReciboPedido.rdlc")
     {
-        // Dados da empresa
-        var empresa   = new Repositories.EmpresaRepository().Obter();
-        var nomeEmp   = !string.IsNullOrWhiteSpace(empresa.NomeFantasia)
-                            ? empresa.NomeFantasia : empresa.RazaoSocial;
-        var endEmp    = string.IsNullOrWhiteSpace(empresa.Logradouro) ? "" :
-                            empresa.Logradouro + ", " + empresa.Numero +
-                            (!string.IsNullOrWhiteSpace(empresa.Complemento)
-                                ? " — " + empresa.Complemento : "");
-        var cidadeEmp = string.IsNullOrWhiteSpace(empresa.Cidade) ? "" :
-                            empresa.Cidade + " — " + empresa.Uf +
-                            (!string.IsNullOrWhiteSpace(empresa.Cep)
-                                ? "   CEP: " + empresa.Cep : "");
+        var empresa = new Repositories.EmpresaRepository().Obter();
+        var nomeEmp = !string.IsNullOrWhiteSpace(empresa.NomeFantasia)
+                          ? empresa.NomeFantasia : empresa.RazaoSocial;
 
-        // DataTable simples: apenas Esquerda e Direita
-        // Separações visuais feitas com caracteres de texto
-        var dt = new DataTable();
-        dt.Columns.Add("Esquerda");
-        dt.Columns.Add("Direita");
+        var report = new Report();
+        var page   = new ReportPage();
+        report.Pages.Add(page);
 
-        void Add(string esq, string dir = "") => dt.Rows.Add(esq, dir);
-        const string Sep = "─────────────────────────────────────────────────────────────────";
+        page.PaperWidth      = 80;
+        page.PaperHeight     = 297;
+        page.UnlimitedHeight = true;
+        page.LeftMargin      = 3;
+        page.RightMargin     = 3;
+        page.TopMargin       = 4;
+        page.BottomMargin    = 4;
 
-        // Itens do pedido
-        foreach (var item in itens)
-            Add(
-                $"{item.NomeProduto}   {item.Quantidade}×  {item.PrecoUnitario.ToString("C2", PtBR)}",
-                item.Subtotal.ToString("C2", PtBR));
+        float w    = MM(page.PaperWidth - page.LeftMargin - page.RightMargin);
+        float cDesc = w * 0.50f;
+        float cQtdU = w * 0.28f;
+        float cVal  = w * 0.22f;
+        float cLbl  = w * 0.65f;
+        float cNum  = w * 0.35f;
 
-        // Separador e total
-        Add(Sep);
-        Add("TOTAL:", pedido.Total.ToString("C2", PtBR));
-        Add(Sep);
+        // ── TUDO em uma única band (evita bug do DataBand no PDF) ──
+        var band = new ReportTitleBand();
+        float y  = 0;
 
-        // Pagamentos
-        Add("FORMA DE PAGAMENTO");
-        foreach (var pag in pagamentos)
-            Add(FormatarFormaPagamento(pag.Forma), pag.Valor.ToString("C2", PtBR));
+        // Empresa
+        if (!string.IsNullOrWhiteSpace(nomeEmp))
+        { Txt(band, nomeEmp.ToUpper(), 0, y, w, MM(8), 11, FontStyle.Bold, HorzAlign.Center); y += MM(10); }
 
-        // Troco (apenas se houver)
-        if (troco > 0)
-            Add("Troco:", troco.ToString("C2", PtBR));
+        if (!string.IsNullOrWhiteSpace(empresa.RazaoSocial) && empresa.RazaoSocial != nomeEmp)
+        { Txt(band, empresa.RazaoSocial, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center, true); y += MM(6); }
 
-        Add(Sep);
-        Add("Obrigado pela preferência!");
+        var endEmp = string.IsNullOrWhiteSpace(empresa.Logradouro) ? "" :
+                     empresa.Logradouro + ", " + empresa.Numero +
+                     (!string.IsNullOrWhiteSpace(empresa.Complemento) ? " - " + empresa.Complemento : "");
+        if (!string.IsNullOrWhiteSpace(endEmp))
+        { Txt(band, endEmp, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center, true); y += MM(6); }
 
-        // Parâmetros do cabeçalho (Total/Pagamentos/Troco agora estão no DataTable)
-        var parametros = new Dictionary<string, string>
+        var bairro   = !string.IsNullOrWhiteSpace(empresa.Bairro) ? empresa.Bairro + " - " : "";
+        var cidadeUf = string.IsNullOrWhiteSpace(empresa.Cidade) ? "" :
+                       bairro + empresa.Cidade + " - " + empresa.Uf +
+                       (!string.IsNullOrWhiteSpace(empresa.Cep) ? "  CEP: " + empresa.Cep : "");
+        if (!string.IsNullOrWhiteSpace(cidadeUf))
+        { Txt(band, cidadeUf, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center); y += MM(6); }
+
+        if (!string.IsNullOrWhiteSpace(empresa.Telefone))
+        { Txt(band, empresa.Telefone, 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Center); y += MM(6); }
+
+        Linha(band, 0, y, w); y += MM(4);
+
+        var cnpjStr = !string.IsNullOrWhiteSpace(empresa.Cnpj) ? $"CNPJ: {empresa.Cnpj}" : "";
+        var ieStr   = !string.IsNullOrWhiteSpace(empresa.InscricaoEst) ? $"IE: {empresa.InscricaoEst}" : "";
+        if (!string.IsNullOrWhiteSpace(cnpjStr) || !string.IsNullOrWhiteSpace(ieStr))
         {
-            ["NomeEmpresa"]     = nomeEmp     ?? "",
-            ["Telefone"]        = empresa.Telefone ?? "",
-            ["EnderecoEmpresa"] = endEmp,
-            ["CidadeEmpresa"]   = cidadeEmp,
-            ["NumeroPedido"]    = pedido.Numero.ToString("D5"),
-            ["DataPedido"]      = pedido.Data.ToString("dd/MM/yyyy  HH:mm"),
-            ["Operador"]        = nomeOperador ?? "",
-        };
+            Txt(band, cnpjStr, 0,         y, w * 0.55f, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+            Txt(band, ieStr,   w * 0.55f,  y, w * 0.45f, MM(5), 7, FontStyle.Regular, HorzAlign.Right);
+            y += MM(6);
+        }
 
-        var rdlcService = new RdlcRelatorioService();
-        var pdfBytes    = rdlcService.GerarPdfBytes(nomeArquivo, "DataSetItens", dt, parametros);
+        Linha(band, 0, y, w); y += MM(4);
+        Txt(band, "CLIENTE: CONSUMIDOR FINAL", 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Left); y += MM(6);
+        Linha(band, 0, y, w); y += MM(4);
 
-        var pasta = PastaRelatorios();
-        Directory.CreateDirectory(pasta);
-        var caminho = Path.Combine(pasta, $"Recibo_{pedido.Numero:D5}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-        File.WriteAllBytes(caminho, pdfBytes);
+        Txt(band, pedido.Data.ToString("dd/MM/yyyy  HH:mm", PtBR), 0, y, w * 0.50f, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+        Txt(band, "COMPROVANTE DE VENDA", w * 0.50f, y, w * 0.50f, MM(4), 6, FontStyle.Regular, HorzAlign.Right);
+        y += MM(5);
+        Txt(band, $"Nº {pedido.Numero:D6}", w * 0.50f, y, w * 0.50f, MM(6), 11, FontStyle.Bold, HorzAlign.Right);
+        y += MM(8);
 
-        var preview = new PDV_CAIXA.Views.RelatorioPreviewWindow("Recibo de Venda", caminho);
-        preview.Show();
+        DuplaLinha(band, 0, y, w); y += MM(4);
+
+        Txt(band, "DESCRIÇÃO",  0,            y, cDesc, MM(4), 7, FontStyle.Bold, HorzAlign.Left);
+        Txt(band, "QTD x UNIT", cDesc,         y, cQtdU, MM(4), 7, FontStyle.Bold, HorzAlign.Center);
+        Txt(band, "R$ VALOR",   cDesc + cQtdU, y, cVal,  MM(4), 7, FontStyle.Bold, HorzAlign.Right);
+        y += MM(4);
+        Linha(band, 0, y, w); y += MM(2);
+
+        // ── ITENS (loop direto, sem DataBand) ──────────────────────
+        foreach (var item in itens)
+        {
+            Txt(band, item.NomeProduto,
+                0, y, cDesc, MM(7), 7, FontStyle.Regular, HorzAlign.Left, wordWrap: true);
+            Txt(band, $"{item.Quantidade}x @ {item.PrecoUnitario.ToString("N2", PtBR)}",
+                cDesc, y, cQtdU, MM(7), 7, FontStyle.Regular, HorzAlign.Center, wordWrap: true);
+            Txt(band, item.Subtotal.ToString("C2", PtBR),
+                cDesc + cQtdU, y, cVal, MM(7), 7, FontStyle.Bold, HorzAlign.Right);
+            y += MM(7);
+        }
+
+        // ── TOTAIS E PAGAMENTOS ────────────────────────────────────
+        Linha(band, 0, y, w); y += MM(4);
+
+        Txt(band, "Total da Nota R$",               0,    y, cLbl, MM(6), 9, FontStyle.Regular, HorzAlign.Left);
+        Txt(band, pedido.Total.ToString("N2", PtBR), cLbl, y, cNum, MM(6), 9, FontStyle.Regular, HorzAlign.Right);
+        y += MM(7);
+
+        decimal totalRecebido = pagamentos.Sum(p => p.Valor);
+        Txt(band, "Valor Recebido R$",                    0,    y, cLbl, MM(6), 9, FontStyle.Regular, HorzAlign.Left);
+        Txt(band, totalRecebido.ToString("N2", PtBR),     cLbl, y, cNum, MM(6), 9, FontStyle.Regular, HorzAlign.Right);
+        y += MM(7);
+
+        if (troco > 0)
+        {
+            Txt(band, "Troco R$",                     0,    y, cLbl, MM(6), 9, FontStyle.Regular, HorzAlign.Left);
+            Txt(band, troco.ToString("N2", PtBR),     cLbl, y, cNum, MM(6), 9, FontStyle.Regular, HorzAlign.Right);
+            y += MM(7);
+        }
+
+        Linha(band, 0, y, w); y += MM(4);
+
+        var formasPgto = string.Join(" / ", pagamentos.Select(p => FormatarFormaPagamento(p.Forma)));
+        Txt(band, $"FORMA DE PGTO.: {formasPgto}", 0, y, w, MM(5), 7, FontStyle.Bold, HorzAlign.Left);
+        y += MM(6);
+
+        Linha(band, 0, y, w); y += MM(3);
+
+        float pc1 = w * 0.30f, pc2 = w * 0.33f, pc3 = w * 0.37f;
+        Txt(band, "DATA PGTO",  0,        y, pc1, MM(4), 7, FontStyle.Bold, HorzAlign.Left);
+        Txt(band, "R$ VALOR",   pc1,       y, pc2, MM(4), 7, FontStyle.Bold, HorzAlign.Center);
+        Txt(band, "TIPO PGTO",  pc1 + pc2, y, pc3, MM(4), 7, FontStyle.Bold, HorzAlign.Right);
+        y += MM(5);
+
+        foreach (var pag in pagamentos)
+        {
+            Txt(band, pedido.Data.ToString("dd/MM/yy", PtBR), 0,        y, pc1, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+            Txt(band, pag.Valor.ToString("N2", PtBR),          pc1,       y, pc2, MM(5), 7, FontStyle.Regular, HorzAlign.Center);
+            Txt(band, FormatarFormaPagamento(pag.Forma),        pc1 + pc2, y, pc3, MM(5), 7, FontStyle.Regular, HorzAlign.Right);
+            y += MM(6);
+        }
+
+        Linha(band, 0, y, w); y += MM(4);
+        Txt(band, $"VENDEDOR(A): {nomeOperador}", 0, y, w, MM(5), 7, FontStyle.Regular, HorzAlign.Left);
+        y += MM(9);
+
+        Linha(band, 0, y, w); y += MM(7);
+        Txt(band, "Recebi a(s) mercadoria(s) acima descrita(s), concordando plenamente com os prazos e condições de garantia.",
+            0, y, w, MM(12), 7, FontStyle.Regular, HorzAlign.Left, wordWrap: true);
+        y += MM(18);
+
+        Txt(band, new string('-', 42), 0, y, w, MM(4), 7, FontStyle.Regular, HorzAlign.Center);
+        y += MM(5);
+        Txt(band, "ASSINATURA DO CLIENTE", 0, y, w, MM(4), 7, FontStyle.Regular, HorzAlign.Center);
+        y += MM(7);
+
+        Linha(band, 0, y, w); y += MM(5);
+        Txt(band, "* OBRIGADO E VOLTE SEMPRE *", 0, y, w, MM(6), 9, FontStyle.Bold, HorzAlign.Center);
+        y += MM(10);
+
+        band.Height = y;
+        page.ReportTitle = band;
+
+        ExportarPdf(report, $"Recibo_{pedido.Numero:D5}", $"Comprovante de Venda — Pedido #{pedido.Numero:D5}");
     }
 
     private static string FormatarFormaPagamento(string forma) => forma switch {

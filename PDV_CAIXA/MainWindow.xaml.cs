@@ -12,15 +12,17 @@ using PDV_CAIXA.Views;
 
 namespace PDV_CAIXA {
     public partial class MainWindow : Window {
-        private readonly Usuario           _usuarioLogado;
-        private readonly UsuarioService    _usuarioService    = new();
-        private readonly ProdutoService    _produtoService    = new();
-        private readonly PedidoService     _pedidoService     = new();
-        private readonly PedidoRepository  _pedidoRepository  = new();
-        private readonly CaixaService      _caixaService      = new();
-        private readonly RelatorioService  _relatorioService  = new();
-        private List<ProdutoViewModel>     _todosProdutos     = new();
-        private bool                       _filtroSoAtivos    = false;
+        private readonly Usuario                  _usuarioLogado;
+        private readonly UsuarioService           _usuarioService           = new();
+        private readonly ProdutoService           _produtoService           = new();
+        private readonly PedidoService            _pedidoService            = new();
+        private readonly PedidoRepository         _pedidoRepository         = new();
+        private readonly CaixaService             _caixaService             = new();
+        private readonly RelatorioService         _relatorioService         = new();
+        private readonly ContaContabilRepository  _contaContabilRepository  = new();
+        private List<ProdutoViewModel>            _todosProdutos            = new();
+        private bool                              _filtroSoAtivos           = false;
+        private List<Models.ContaContabil>        _todasContas              = new();
 
         // ── Caixa ────────────────────────────────────────────────────
         private Models.Caixa? _caixaAtivo;
@@ -151,31 +153,33 @@ namespace PDV_CAIXA {
         // ── Navegação ────────────────────────────────────────────────
 
         private void MostrarPagina(UIElement pagina) {
-            pageInicio.Visibility    = Visibility.Collapsed;
-            pagePDV.Visibility       = Visibility.Collapsed;
-            pageProdutos.Visibility  = Visibility.Collapsed;
-            pageUsuarios.Visibility  = Visibility.Collapsed;
-            pagePedidos.Visibility   = Visibility.Collapsed;
-            pageHistorico.Visibility    = Visibility.Collapsed;
-            pageCaixa.Visibility        = Visibility.Collapsed;
-            pageRelatorios.Visibility       = Visibility.Collapsed;
-            pageConfigRelatorios.Visibility = Visibility.Collapsed;
-            pageEmpresa.Visibility          = Visibility.Collapsed;
-            pageFerramentas.Visibility      = Visibility.Collapsed;
-            pagina.Visibility           = Visibility.Visible;
+            pageInicio.Visibility         = Visibility.Collapsed;
+            pagePDV.Visibility            = Visibility.Collapsed;
+            pageProdutos.Visibility       = Visibility.Collapsed;
+            pageUsuarios.Visibility       = Visibility.Collapsed;
+            pagePedidos.Visibility        = Visibility.Collapsed;
+            pageHistorico.Visibility      = Visibility.Collapsed;
+            pageCaixa.Visibility          = Visibility.Collapsed;
+            pageRelatorios.Visibility         = Visibility.Collapsed;
+            pageConfigRelatorios.Visibility   = Visibility.Collapsed;
+            pageEmpresa.Visibility            = Visibility.Collapsed;
+            pageFerramentas.Visibility        = Visibility.Collapsed;
+            pageContaContabil.Visibility      = Visibility.Collapsed;
+            pagina.Visibility             = Visibility.Visible;
         }
 
         private void ResetarMenus() {
-            btnMenuInicio.Style    = (Style)FindResource("MenuButton");
-            btnMenuPDV.Style       = (Style)FindResource("MenuButton");
-            btnMenuProdutos.Style  = (Style)FindResource("MenuButton");
-            btnMenuUsuarios.Style  = (Style)FindResource("MenuButton");
-            btnMenuPedidos.Style   = (Style)FindResource("MenuButton");
-            btnMenuHistorico.Style   = (Style)FindResource("MenuButton");
-            btnMenuCaixa.Style        = (Style)FindResource("MenuButton");
-            btnMenuRelatorios.Style   = (Style)FindResource("MenuButton");
-            btnMenuEmpresa.Style      = (Style)FindResource("MenuButton");
-            btnMenuFerramentas.Style  = (Style)FindResource("MenuButton");
+            btnMenuInicio.Style         = (Style)FindResource("MenuButton");
+            btnMenuPDV.Style            = (Style)FindResource("MenuButton");
+            btnMenuProdutos.Style       = (Style)FindResource("MenuButton");
+            btnMenuUsuarios.Style       = (Style)FindResource("MenuButton");
+            btnMenuPedidos.Style        = (Style)FindResource("MenuButton");
+            btnMenuHistorico.Style      = (Style)FindResource("MenuButton");
+            btnMenuCaixa.Style          = (Style)FindResource("MenuButton");
+            btnMenuRelatorios.Style     = (Style)FindResource("MenuButton");
+            btnMenuEmpresa.Style        = (Style)FindResource("MenuButton");
+            btnMenuFerramentas.Style    = (Style)FindResource("MenuButton");
+            btnMenuContaContabil.Style  = (Style)FindResource("MenuButton");
         }
 
         // ── Overlay de carregamento ──────────────────────────────────
@@ -796,7 +800,23 @@ namespace PDV_CAIXA {
         }
 
         // ── Teclado físico capturado na janela inteira ────────────────
+        private bool _telaCheia = false;
+
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e) {
+            if (e.Key == Key.F11) {
+                if (!_telaCheia) {
+                    WindowStyle  = WindowStyle.None;
+                    WindowState  = WindowState.Maximized;
+                    _telaCheia   = true;
+                } else {
+                    WindowStyle  = WindowStyle.SingleBorderWindow;
+                    WindowState  = WindowState.Normal;
+                    _telaCheia   = false;
+                }
+                e.Handled = true;
+                return;
+            }
+
             if (pagePedidos.Visibility != Visibility.Visible) return;
             // Se um TextBox (campo UUID) está com foco, não interceptar
             if (Keyboard.FocusedElement is System.Windows.Controls.TextBox) return;
@@ -844,14 +864,29 @@ namespace PDV_CAIXA {
         }
 
         private void DgPedidos_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (dgPedidos.SelectedItem is not PedidoResumoViewModel pedido) {
+                btnImprimirReciboPesquisa.Visibility = Visibility.Collapsed;
+                return;
+            }
+            try {
+                var itens = _pedidoRepository.ObterItens(pedido.Id).ToList();
+                dgItensPedido.ItemsSource            = itens;
+                pedidosTxtDetalhe.Text               = $"Itens do Pedido {pedido.NumeroTexto}  —  {pedido.TotalTexto}  |  {pedido.PagamentoTexto}";
+                pedidosItensVazio.Visibility         = itens.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                btnImprimirReciboPesquisa.Visibility = itens.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao carregar itens:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnImprimirReciboPesquisa_Click(object sender, RoutedEventArgs e) {
             if (dgPedidos.SelectedItem is not PedidoResumoViewModel pedido) return;
             try {
                 var itens = _pedidoRepository.ObterItens(pedido.Id).ToList();
-                dgItensPedido.ItemsSource      = itens;
-                pedidosTxtDetalhe.Text         = $"Itens do Pedido {pedido.NumeroTexto}  —  {pedido.TotalTexto}  |  {pedido.PagamentoTexto}";
-                pedidosItensVazio.Visibility   = itens.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+                _relatorioService.ImprimirHistoricoPedido(pedido, itens);
             } catch (Exception ex) {
-                MessageBox.Show("Erro ao carregar itens:\n\n" + ex.Message,
+                MessageBox.Show("Erro ao imprimir recibo:\n\n" + ex.Message,
                     "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -1145,6 +1180,78 @@ namespace PDV_CAIXA {
             } catch (Exception ex) {
                 empBannerErro.Visibility = Visibility.Visible;
                 empTxtErro.Text = "Erro ao salvar: " + ex.Message;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // ── CONTA CONTÁBIL ───────────────────────────────────────────
+        // ════════════════════════════════════════════════════════════
+
+        private void BtnMenuContaContabil_Click(object sender, RoutedEventArgs e) {
+            MostrarPagina(pageContaContabil);
+            ResetarMenus();
+            btnMenuContaContabil.Style = (Style)FindResource("MenuButtonActive");
+            ContaCarregar();
+        }
+
+        private void ContaCarregar() {
+            try {
+                _todasContas = _contaContabilRepository.ObterTodos().ToList();
+                ContaAplicarFiltro(txtBuscaConta.Text);
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao carregar contas contábeis:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ContaAplicarFiltro(string busca) {
+            var filtro = string.IsNullOrWhiteSpace(busca)
+                ? _todasContas
+                : _todasContas.Where(c =>
+                    c.CodigoContabil.Contains(busca, StringComparison.OrdinalIgnoreCase) ||
+                    c.Descricao.Contains(busca, StringComparison.OrdinalIgnoreCase) ||
+                    (c.CodigoReduzido?.Contains(busca, StringComparison.OrdinalIgnoreCase) == true)).ToList();
+
+            dgContas.ItemsSource    = filtro;
+            txtContadorContas.Text  = $"{filtro.Count} conta(s)";
+        }
+
+        private void TxtBuscaConta_TextChanged(object sender, TextChangedEventArgs e)
+            => ContaAplicarFiltro(txtBuscaConta.Text);
+
+        private void BtnNovaContaContabil_Click(object sender, RoutedEventArgs e) {
+            var janela = new CadastroContaContabilWindow { Owner = this };
+            if (janela.ShowDialog() == true) ContaCarregar();
+        }
+
+        private void DgContas_DoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            if (dgContas.SelectedItem is Models.ContaContabil conta) AbrirEdicaoConta(conta);
+        }
+
+        private void BtnEditarConta_Click(object sender, RoutedEventArgs e) {
+            if (((FrameworkElement)sender).Tag is Models.ContaContabil conta) AbrirEdicaoConta(conta);
+        }
+
+        private void AbrirEdicaoConta(Models.ContaContabil conta) {
+            var janela = new CadastroContaContabilWindow(conta) { Owner = this };
+            if (janela.ShowDialog() == true) ContaCarregar();
+        }
+
+        private void BtnExcluirConta_Click(object sender, RoutedEventArgs e) {
+            if (((FrameworkElement)sender).Tag is not Models.ContaContabil conta) return;
+
+            var resp = MessageBox.Show(
+                $"Deseja excluir a conta \"{conta.CodigoContabil} - {conta.Descricao}\"?",
+                "Confirmar exclusão", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (resp != MessageBoxResult.Yes) return;
+
+            try {
+                _contaContabilRepository.Excluir(conta.Id);
+                ContaCarregar();
+            } catch (Exception ex) {
+                MessageBox.Show("Erro ao excluir conta:\n\n" + ex.Message,
+                    "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

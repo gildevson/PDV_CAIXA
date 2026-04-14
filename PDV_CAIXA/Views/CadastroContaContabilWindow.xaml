@@ -1,0 +1,217 @@
+<Window x:Class="PDV_CAIXA.Views.CadastroContaContabilWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cadastro de Conta Contábil"
+        Height="680" Width="520"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#1E1E2E">
+
+    <Window.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#8888AA"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Background" Value="#252538"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="CaretBrush" Value="#7C83FF"/>
+            <Setter Property="BorderBrush" Value="#3A3A55"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#7C83FF"/>
+                    <Setter Property="Background" Value="#2C2C45"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Background" Value="#252538"/>
+            <Setter Property="Foreground" Value="#E0E0E0"/>
+            <Setter Property="BorderBrush" Value="#3A3A55"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+
+        <!-- Cabeçalho -->
+        <Border DockPanel.Dock="Top" Background="#13131F" Padding="24,18">
+            <StackPanel Orientation="Horizontal">
+                <Border Background="#7C83FF" CornerRadius="10"
+                        Width="42" Height="42" Margin="0,0,14,0">
+                    <TextBlock Text="📒" FontSize="18"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="txtTitulo" Text="Nova Conta Contábil"
+                               FontSize="16" FontWeight="Bold" Foreground="#E0E0E0"/>
+                    <TextBlock x:Name="txtSubtitulo" Text="Preencha os dados da conta"
+                               FontSize="11" Foreground="#6C6F85" Margin="0,2,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Botões rodapé -->
+        <Border DockPanel.Dock="Bottom" Background="#13131F" Padding="24,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Content="Cancelar" Height="40"
+                        FontSize="13" Cursor="Hand" Click="BtnCancelar_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="#2A2A3E"
+                                    BorderBrush="#3A3A55" BorderThickness="1.5" CornerRadius="8">
+                                <TextBlock Text="{TemplateBinding Content}" Foreground="#A0A0C0"
+                                           FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#33334A"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="#6C6F85"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Grid.Column="2" x:Name="btnSalvar"
+                        Content="✔  Salvar Conta" Height="40"
+                        FontSize="13" FontWeight="SemiBold"
+                        Cursor="Hand" Click="BtnSalvar_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="#7C83FF" CornerRadius="8">
+                                <TextBlock Text="{TemplateBinding Content}" Foreground="White"
+                                           FontSize="13" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#6970E0"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#555BC4"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="bd" Property="Background" Value="#3A3A55"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Formulário -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24,20,24,8">
+
+                <!-- Código Contábil e Código Reduzido -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="CÓDIGO CONTÁBIL" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="txtCodigoContabil" MaxLength="30"/>
+                        <TextBlock x:Name="txtErroCodigoContabil" Foreground="#FF6B6B" FontSize="11"
+                                   Margin="0,2,0,0" Visibility="Collapsed"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="CÓDIGO REDUZIDO" Style="{StaticResource FieldLabel}"/>
+                        <TextBox x:Name="txtCodigoReduzido" MaxLength="30"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Descrição -->
+                <TextBlock Text="DESCRIÇÃO *" Style="{StaticResource FieldLabel}"/>
+                <TextBox x:Name="txtDescricao" MaxLength="50" Margin="0,0,0,4"/>
+                <TextBlock x:Name="txtErroDescricao" Foreground="#FF6B6B" FontSize="11"
+                           Margin="0,0,0,12" Visibility="Collapsed"/>
+
+                <!-- Grupo e Tipo -->
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="GRUPO" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox x:Name="cmbGrupo" IsEditable="True">
+                            <ComboBoxItem Content="Ativo"/>
+                            <ComboBoxItem Content="Passivo"/>
+                            <ComboBoxItem Content="Patrimônio Líquido"/>
+                            <ComboBoxItem Content="Receita"/>
+                            <ComboBoxItem Content="Despesa"/>
+                            <ComboBoxItem Content="Custo"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="TIPO" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox x:Name="cmbTipo" IsEditable="True">
+                            <ComboBoxItem Content="Analítica"/>
+                            <ComboBoxItem Content="Sintética"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Código Histórico -->
+                <TextBlock Text="CÓDIGO HISTÓRICO" Style="{StaticResource FieldLabel}"/>
+                <TextBox x:Name="txtCodigoHistorico" MaxLength="30" Margin="0,0,0,16"/>
+
+                <!-- Histórico -->
+                <TextBlock Text="HISTÓRICO" Style="{StaticResource FieldLabel}"/>
+                <TextBox x:Name="txtHistorico"
+                         Height="70" MaxLength="150"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         VerticalContentAlignment="Top"
+                         Padding="12,10"
+                         Margin="0,0,0,16"/>
+
+                <!-- Grupo Contábil Entrada -->
+                <TextBlock Text="GRUPO CONTÁBIL ENTRADA" Style="{StaticResource FieldLabel}"/>
+                <ComboBox x:Name="cmbGrupoEntrada" IsEditable="True" Margin="0,0,0,16"/>
+
+                <!-- Grupo Contábil Saída -->
+                <TextBlock Text="GRUPO CONTÁBIL SAÍDA" Style="{StaticResource FieldLabel}"/>
+                <ComboBox x:Name="cmbGrupoSaida" IsEditable="True" Margin="0,0,0,16"/>
+
+                <!-- Centro de Custo -->
+                <TextBlock Text="CENTRO DE CUSTO" Style="{StaticResource FieldLabel}"/>
+                <ComboBox x:Name="cmbCentroDeCusto" IsEditable="True" Margin="0,0,0,16"/>
+
+                <!-- Exibir em lançamentos manuais -->
+                <CheckBox x:Name="chkExibir"
+                          IsChecked="True"
+                          Foreground="#E0E0E0"
+                          FontSize="13"
+                          Margin="0,0,0,8"
+                          Content="Exibir em lançamentos manuais"/>
+
+                <!-- Erro geral -->
+                <TextBlock x:Name="txtErroGeral" Foreground="#FF6B6B" FontSize="12"
+                           TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+    </DockPanel>
+</Window>

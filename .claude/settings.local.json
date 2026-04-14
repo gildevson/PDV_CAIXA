@@ -42,7 +42,8 @@
       "Bash(cmd /c \"taskkill /PID 38140 /F && timeout /t 2 && dotnet build PDV_CAIXA/PDV_CAIXA.csproj -c Debug --no-restore\")",
       "Bash(cmd /c \"taskkill /PID 23636 /F\" 2>&1)",
       "Bash(cmd /c \"dotnet build PDV_CAIXA/PDV_CAIXA.csproj -c Debug 2>&1\")",
-      "Bash(cmd /c \"tasklist | findstr PDV_CAIXA\")"
+      "Bash(cmd /c \"tasklist | findstr PDV_CAIXA\")",
+      "Bash(ls:*)"
     ]
   }
 }
