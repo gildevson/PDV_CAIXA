@@ -5,9 +5,10 @@ namespace PDV_CAIXA.ViewModels {
     public class CarrinhoItemViewModel : INotifyPropertyChanged {
         private int _quantidade = 1;
 
-        public Guid    ProdutoId     { get; set; }
-        public string  Nome          { get; set; } = string.Empty;
-        public decimal PrecoUnitario { get; set; }
+        public Guid     ProdutoId     { get; set; }
+        public string   Nome          { get; set; } = string.Empty;
+        public decimal  PrecoUnitario { get; set; }
+        public decimal? Peso          { get; set; }
 
         public int Quantidade {
             get => _quantidade;

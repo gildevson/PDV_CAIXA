@@ -8,6 +8,7 @@ namespace PDV_CAIXA.Models {
         public decimal Desconto      { get; set; } = 0;
         public int     Estoque       { get; set; }
         public bool    Ativo         { get; set; } = true;
+        public bool    VendidoPorPeso { get; set; } = false;
         public byte[]? Foto          { get; set; }
     }
 }

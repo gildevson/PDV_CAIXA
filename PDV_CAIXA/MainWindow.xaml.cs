@@ -216,7 +216,8 @@ namespace PDV_CAIXA {
                         .Where(p => p.Ativo && p.Estoque > 0)
                         .Select(p => new ProdutoViewModel {
                             Id = p.Id, Nome = p.Nome, CodigoBarras = p.CodigoBarras,
-                            Preco = p.Preco, Desconto = p.Desconto, Estoque = p.Estoque, Ativo = p.Ativo
+                            Preco = p.Preco, Desconto = p.Desconto, Estoque = p.Estoque,
+                            Ativo = p.Ativo, VendidoPorPeso = p.VendidoPorPeso
                         }).ToList());
                 _pdvTodosProdutos = produtos;
                 PdvAplicarFiltro();
@@ -500,12 +501,14 @@ namespace PDV_CAIXA {
                 _pdvTodosProdutos = _produtoService.ObterTodos()
                     .Where(p => p.Ativo)
                     .Select(p => new ProdutoViewModel {
-                        Id           = p.Id,
-                        Nome         = p.Nome,
-                        CodigoBarras = p.CodigoBarras,
-                        Preco        = p.Preco,
-                        Estoque      = p.Estoque,
-                        Ativo        = p.Ativo
+                        Id             = p.Id,
+                        Nome           = p.Nome,
+                        CodigoBarras   = p.CodigoBarras,
+                        Preco          = p.Preco,
+                        Desconto       = p.Desconto,
+                        Estoque        = p.Estoque,
+                        Ativo          = p.Ativo,
+                        VendidoPorPeso = p.VendidoPorPeso
                     }).ToList();
                 PdvAplicarFiltro();
             } catch (Exception ex) {
@@ -573,26 +576,45 @@ namespace PDV_CAIXA {
                 produto = p2;
             }
 
-            if (!int.TryParse(pdvTxtQtd.Text, out var qtd) || qtd < 1)
-                qtd = 1;
+            if (produto.VendidoPorPeso) {
+                var dialog = new PesarProdutoWindow(produto) { Owner = this };
+                if (dialog.ShowDialog() != true) return;
 
-            var existente = _carrinho.FirstOrDefault(c => c.ProdutoId == produto.Id);
-            if (existente != null) {
-                existente.Quantidade += qtd;
-            } else {
+                var pesoKg     = dialog.PesoKg;
+                var pesoTexto  = pesoKg.ToString("N3", new System.Globalization.CultureInfo("pt-BR"));
+                var nomeItem   = produto.Desconto > 0
+                    ? $"{produto.Nome} ({pesoTexto} kg) (-{produto.Desconto:F0}%)"
+                    : $"{produto.Nome} ({pesoTexto} kg)";
+
                 _carrinho.Add(new CarrinhoItemViewModel {
                     ProdutoId     = produto.Id,
-                    Nome          = produto.Desconto > 0
-                                        ? $"{produto.Nome} (-{produto.Desconto:F0}%)"
-                                        : produto.Nome,
-                    PrecoUnitario = produto.PrecoComDesconto,
-                    Quantidade    = qtd
+                    Nome          = nomeItem,
+                    PrecoUnitario = dialog.Total,
+                    Quantidade    = 1,
+                    Peso          = dialog.PesoKg
                 });
+            } else {
+                if (!int.TryParse(pdvTxtQtd.Text, out var qtd) || qtd < 1)
+                    qtd = 1;
+
+                var existente = _carrinho.FirstOrDefault(c => c.ProdutoId == produto.Id && !c.Nome.Contains(" kg)"));
+                if (existente != null) {
+                    existente.Quantidade += qtd;
+                } else {
+                    _carrinho.Add(new CarrinhoItemViewModel {
+                        ProdutoId     = produto.Id,
+                        Nome          = produto.Desconto > 0
+                                            ? $"{produto.Nome} (-{produto.Desconto:F0}%)"
+                                            : produto.Nome,
+                        PrecoUnitario = produto.PrecoComDesconto,
+                        Quantidade    = qtd
+                    });
+                }
             }
 
-            pdvTxtQtd.Text           = "1";
+            pdvTxtQtd.Text              = "1";
             pdvLstProdutos.SelectedItem = null;
-            pdvTxtBusca.Text         = string.Empty;
+            pdvTxtBusca.Text            = string.Empty;
             pdvTxtBusca.Focus();
 
             PdvAtualizarTotal();
@@ -658,6 +680,7 @@ namespace PDV_CAIXA {
                     ProdutoId     = c.ProdutoId,
                     NomeProduto   = c.Nome,
                     Quantidade    = c.Quantidade,
+                    Peso          = c.Peso,
                     PrecoUnitario = c.PrecoUnitario,
                     Subtotal      = c.Subtotal
                 }).ToList();

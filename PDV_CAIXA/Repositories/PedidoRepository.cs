@@ -55,7 +55,7 @@ namespace PDV_CAIXA.Repositories {
         public IEnumerable<PedidoItem> ObterItens(Guid pedidoId) {
             using var conn = _conexao.CriarConexao();
             return conn.Query<PedidoItem>(
-                @"SELECT id, pedido_id, produto_id, nome_produto, quantidade, preco_unitario, subtotal
+                @"SELECT id, pedido_id, produto_id, nome_produto, quantidade, peso, preco_unitario, subtotal
                   FROM pedido_itens
                   WHERE pedido_id = @PedidoId
                   ORDER BY nome_produto",
@@ -77,8 +77,8 @@ namespace PDV_CAIXA.Repositories {
             // Salva cada item e desconta estoque
             foreach (var item in itens) {
                 conn.Execute(
-                    @"INSERT INTO pedido_itens (id, pedido_id, produto_id, nome_produto, quantidade, preco_unitario, subtotal)
-                      VALUES (@Id, @PedidoId, @ProdutoId, @NomeProduto, @Quantidade, @PrecoUnitario, @Subtotal)",
+                    @"INSERT INTO pedido_itens (id, pedido_id, produto_id, nome_produto, quantidade, peso, preco_unitario, subtotal)
+                      VALUES (@Id, @PedidoId, @ProdutoId, @NomeProduto, @Quantidade, @Peso, @PrecoUnitario, @Subtotal)",
                     item, tx);
 
                 conn.Execute(

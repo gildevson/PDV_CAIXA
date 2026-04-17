@@ -5,9 +5,10 @@ namespace PDV_CAIXA.Models {
         public Guid    PedidoId       { get; set; }
         public Guid    ProdutoId      { get; set; }
         public string  NomeProduto    { get; set; } = string.Empty;
-        public int     Quantidade     { get; set; }
-        public decimal PrecoUnitario  { get; set; }
-        public decimal Subtotal       { get; set; }
+        public int      Quantidade     { get; set; }
+        public decimal? Peso          { get; set; }
+        public decimal  PrecoUnitario { get; set; }
+        public decimal  Subtotal      { get; set; }
 
         public string PrecoUnitarioTexto => PrecoUnitario.ToString("C2", new CultureInfo("pt-BR"));
         public string SubtotalTexto      => Subtotal.ToString("C2", new CultureInfo("pt-BR"));

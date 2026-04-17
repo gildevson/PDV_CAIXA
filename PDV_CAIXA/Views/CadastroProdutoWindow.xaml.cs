@@ -13,11 +13,13 @@ namespace PDV_CAIXA.Views {
         private readonly ProdutoService _produtoService = new();
         private readonly Produto?       _produtoEditando;
         private bool                    _ativo = true;
+        private bool                    _vendidoPorPeso = false;
         private byte[]?                 _fotoBytes;
 
         public CadastroProdutoWindow() {
             InitializeComponent();
             SelecionarSituacao(true);
+            SelecionarTipoVenda(false);
         }
 
         public CadastroProdutoWindow(Produto produto) {
@@ -34,6 +36,7 @@ namespace PDV_CAIXA.Views {
             txtEstoque.Text       = produto.Estoque.ToString();
             txtDescricao.Text     = produto.Descricao ?? string.Empty;
             SelecionarSituacao(produto.Ativo);
+            SelecionarTipoVenda(produto.VendidoPorPeso);
             AtualizarPreviewDesconto();
 
             if (produto.Foto is { Length: > 0 }) {
@@ -118,6 +121,33 @@ namespace PDV_CAIXA.Views {
             }
         }
 
+        // ── Tipo de venda ───────────────────────────────────────────────
+
+        private void SelecionarTipoVenda(bool porPeso) {
+            _vendidoPorPeso = porPeso;
+            var corAtiva   = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7C83FF"));
+            var corInativa = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3A3A55"));
+            var txtAtivo   = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7C83FF"));
+            var txtInativo = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A0A0C0"));
+
+            cardPorUnidade.BorderBrush = porPeso ? corInativa : corAtiva;
+            cardPorPeso.BorderBrush    = porPeso ? corAtiva : corInativa;
+
+            foreach (var tb in FindVisualChildren<System.Windows.Controls.TextBlock>(cardPorUnidade))
+                if (tb.FontSize == 13) tb.Foreground = porPeso ? txtInativo : txtAtivo;
+            foreach (var tb in FindVisualChildren<System.Windows.Controls.TextBlock>(cardPorPeso))
+                if (tb.FontSize == 13) tb.Foreground = porPeso ? txtAtivo : txtInativo;
+
+            if (lblPreco != null)
+                lblPreco.Text = porPeso ? "PREÇO (R$/kg)" : "PREÇO (R$)";
+        }
+
+        private void CardPorUnidade_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+            => SelecionarTipoVenda(false);
+
+        private void CardPorPeso_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+            => SelecionarTipoVenda(true);
+
         // ── Situação ────────────────────────────────────────────────────
 
         private void SelecionarSituacao(bool ativo) {
@@ -182,15 +212,16 @@ namespace PDV_CAIXA.Views {
                 btnSalvar.IsEnabled = false;
 
                 var produto = new Produto {
-                    Id           = _produtoEditando?.Id ?? Guid.Empty,
-                    Nome         = nome,
-                    CodigoBarras = string.IsNullOrWhiteSpace(txtCodigoBarras.Text) ? null : txtCodigoBarras.Text.Trim(),
-                    Preco        = preco,
-                    Desconto     = desconto,
-                    Estoque      = estoque,
-                    Descricao    = string.IsNullOrWhiteSpace(txtDescricao.Text) ? null : txtDescricao.Text.Trim(),
-                    Ativo        = _ativo,
-                    Foto         = _fotoBytes
+                    Id             = _produtoEditando?.Id ?? Guid.Empty,
+                    Nome           = nome,
+                    CodigoBarras   = string.IsNullOrWhiteSpace(txtCodigoBarras.Text) ? null : txtCodigoBarras.Text.Trim(),
+                    Preco          = preco,
+                    Desconto       = desconto,
+                    Estoque        = estoque,
+                    Descricao      = string.IsNullOrWhiteSpace(txtDescricao.Text) ? null : txtDescricao.Text.Trim(),
+                    Ativo          = _ativo,
+                    VendidoPorPeso = _vendidoPorPeso,
+                    Foto           = _fotoBytes
                 };
 
                 if (_produtoEditando == null)
