@@ -4,6 +4,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.SkiaSharpView.VisualElements;
+using SkiaSharp;
 using PDV_CAIXA.Models;
 using PDV_CAIXA.Repositories;
 using PDV_CAIXA.Services;
@@ -112,6 +117,7 @@ namespace PDV_CAIXA {
             // Carrega caixa aberto imediatamente para que vendas no PDV possam ser finalizadas
             // mesmo sem o usuário ter visitado a página de Caixa nesta sessão
             try { _caixaAtivo = _caixaService.ObterCaixaAberto(); } catch { }
+            Loaded += async (_, _) => await CarregarDashboard();
         }
 
         private void ConfigurarPerfil() {
@@ -195,10 +201,188 @@ namespace PDV_CAIXA {
 
         // ── Navegação (async) ────────────────────────────────────────
 
-        private void BtnMenuInicio_Click(object sender, RoutedEventArgs e) {
+        private void MenuScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) {
+            if (sender is ScrollViewer sv) {
+                sv.ScrollToVerticalOffset(sv.VerticalOffset - e.Delta * 0.5);
+                e.Handled = true;
+            }
+        }
+
+        private async void BtnMenuInicio_Click(object sender, RoutedEventArgs e) {
             MostrarPagina(pageInicio);
             ResetarMenus();
             btnMenuInicio.Style = (Style)FindResource("MenuButtonActive");
+            await CarregarDashboard();
+        }
+
+        private async Task CarregarDashboard() {
+            var ptBR = new System.Globalization.CultureInfo("pt-BR");
+            txtDataHoje.Text = DateTime.Now.ToString("dddd, dd 'de' MMMM 'de' yyyy", ptBR);
+
+            try {
+                // ── KPI: Pedidos e faturamento do dia ────────────────────
+                var (qtd, fat) = await Task.Run(() => _pedidoRepository.ObterTotais(DateTime.Today));
+                txtPedidosHoje.Text     = qtd.ToString();
+                txtFaturamentoHoje.Text = fat.ToString("C", ptBR);
+
+                // ── KPI: Total de produtos ────────────────────────────────
+                var produtos = await Task.Run(() => _produtoService.ObterTodos().ToList());
+                txtTotalProdutos.Text = produtos.Count.ToString();
+
+                // ── KPI: Status do caixa ──────────────────────────────────
+                var caixa = await Task.Run(() => _caixaService.ObterCaixaAberto());
+                if (caixa != null) {
+                    txtStatusCaixa.Text       = "Aberto";
+                    txtStatusCaixa.Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#50FA7B"));
+                    txtStatusCaixaDetalhe.Text = $"aberto às {caixa.DataAbertura:HH:mm}";
+
+                    var formas = await Task.Run(() => _caixaService.ObterTotaisPorForma(caixa.Id));
+                    txtDashDinheiro.Text   = formas.Dinheiro.ToString("C", ptBR);
+                    txtDashCredito.Text    = formas.Credito.ToString("C", ptBR);
+                    txtDashDebito.Text     = formas.Debito.ToString("C", ptBR);
+                    txtDashPix.Text        = formas.Pix.ToString("C", ptBR);
+                    txtDashTotalCaixa.Text = formas.Total.ToString("C", ptBR);
+                } else {
+                    txtStatusCaixa.Text       = "Fechado";
+                    txtStatusCaixa.Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF5555"));
+                    txtStatusCaixaDetalhe.Text = "nenhum caixa aberto";
+                    txtDashDinheiro.Text = txtDashCredito.Text =
+                    txtDashDebito.Text   = txtDashPix.Text     =
+                    txtDashTotalCaixa.Text = "R$ 0,00";
+                }
+
+                // ── Gráfico: carrega com período padrão (7 dias) ─────────
+                await AtualizarGrafico(7);
+
+                // ── Estoque Baixo ─────────────────────────────────────────
+                var alertas = produtos
+                    .Where(p => p.Ativo && !p.VendidoPorPeso && p.Estoque <= 5)
+                    .OrderBy(p => p.Estoque)
+                    .Take(8)
+                    .Select(p => new {
+                        Nome       = p.Nome,
+                        EstoqueStr = p.Estoque == 0 ? "Zerado" : $"{p.Estoque} un.",
+                        CorFundo   = p.Estoque == 0 ? "#2D1515" : "#2D2010",
+                        CorTexto   = p.Estoque == 0 ? "#FF5555" : "#FFB86C"
+                    }).ToList();
+
+                dashEstoqueBaixo.ItemsSource = alertas;
+                txtQtdAlerta.Text      = alertas.Count.ToString();
+                txtSemAlerta.Visibility = alertas.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+                // ── Pedidos Recentes ──────────────────────────────────────
+                var recentes = await Task.Run(() => _pedidoRepository.ListarRecentes(6));
+                var itens = recentes.Select(p => new {
+                    Numero         = p.NumeroTexto,
+                    FormaPagamento = p.PagamentoTexto,
+                    Hora           = p.Data.ToString("HH:mm"),
+                    Total          = p.TotalTexto
+                }).ToList();
+
+                dashListPedidos.ItemsSource  = itens;
+                txtDashSemPedidos.Visibility = itens.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            } catch { /* falha silenciosa — dashboard não é crítico */ }
+        }
+
+        private int _graficoPeriodoDias = 7;
+
+        private async void BtnGraficoPeriodo_Click(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            if (sender is not Border btn || btn.Tag is not string tagStr) return;
+            _graficoPeriodoDias = int.Parse(tagStr);
+            AtualizarEstiloBotoesPeriodo();
+            await AtualizarGrafico(_graficoPeriodoDias);
+        }
+
+        private void AtualizarEstiloBotoesPeriodo() {
+            var corAtiva   = new System.Windows.Media.SolidColorBrush(
+                                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#7C83FF"));
+            var corInativa = new System.Windows.Media.SolidColorBrush(
+                                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2A2A3E"));
+            var txtAtivo   = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.White);
+            var txtInativo = new System.Windows.Media.SolidColorBrush(
+                                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#6C6F85"));
+
+            foreach (var (btn, dias) in new[] {
+                (btnGrafico7, 7), (btnGrafico15, 15), (btnGrafico30, 30) }) {
+                var ativo = dias == _graficoPeriodoDias;
+                btn.Background = ativo ? corAtiva : corInativa;
+                if (btn.Child is System.Windows.Controls.TextBlock tb) {
+                    tb.Foreground  = ativo ? txtAtivo : txtInativo;
+                    tb.FontWeight  = ativo ? FontWeights.SemiBold : FontWeights.Normal;
+                }
+            }
+
+            txtGraficoTitulo.Text = $"Vendas — Últimos {_graficoPeriodoDias} Dias";
+        }
+
+        private async Task AtualizarGrafico(int dias) {
+            try {
+                var nomesDias   = new[] { "Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb" };
+                var inicio      = DateTime.Today.AddDays(-(dias - 1));
+                var pedidos     = await Task.Run(() => _pedidoRepository.ListarPorPeriodo(inicio).ToList());
+                var vendasDia   = pedidos.GroupBy(p => p.Data.Date)
+                                         .ToDictionary(g => g.Key, g => g.Sum(p => p.Total));
+
+                var labelsEixoX = new string[dias];
+                var valoresBar  = new double[dias];
+
+                // Para 30 dias, mostrar só data; para 7/15 mostrar dia + data
+                bool soData = dias > 15;
+
+                for (int i = 0; i < dias; i++) {
+                    var dia        = DateTime.Today.AddDays(-(dias - 1 - i));
+                    labelsEixoX[i] = soData
+                        ? dia.ToString("dd/MM")
+                        : $"{nomesDias[(int)dia.DayOfWeek]}\n{dia:dd/MM}";
+                    valoresBar[i]  = vendasDia.TryGetValue(dia, out var v) ? (double)v : 0.0;
+                }
+
+                dashChart.Series = new ISeries[] {
+                    new ColumnSeries<double> {
+                        Values      = valoresBar,
+                        Name        = "Faturamento",
+                        MaxBarWidth = dias <= 7 ? 40 : dias <= 15 ? 24 : 14,
+                        Rx = 3, Ry = 3,
+                        Fill   = new SolidColorPaint(new SKColor(0x7C, 0x83, 0xFF, 0xDD)),
+                        Stroke = null,
+                        DataLabelsPaint     = dias <= 15
+                            ? new SolidColorPaint(new SKColor(0xA0, 0xA0, 0xC0))
+                            : null,
+                        DataLabelsSize      = 9,
+                        DataLabelsPosition  = LiveChartsCore.Measure.DataLabelsPosition.Top,
+                        DataLabelsFormatter = p => DashFormatarCurto((decimal)p.Coordinate.PrimaryValue)
+                    }
+                };
+
+                dashChart.XAxes = new Axis[] {
+                    new Axis {
+                        Labels      = labelsEixoX,
+                        TextSize    = dias <= 15 ? 10 : 9,
+                        LabelsPaint = new SolidColorPaint(new SKColor(0x6C, 0x6F, 0x85)),
+                        SeparatorsPaint = null,
+                        TicksPaint      = null
+                    }
+                };
+
+                dashChart.YAxes = new Axis[] {
+                    new Axis {
+                        TextSize    = 10,
+                        LabelsPaint = new SolidColorPaint(new SKColor(0x44, 0x47, 0x5A)),
+                        SeparatorsPaint = new SolidColorPaint(new SKColor(0x2A, 0x2A, 0x3E)) { StrokeThickness = 1 },
+                        Labeler     = v => DashFormatarCurto((decimal)v),
+                        MinLimit    = 0
+                    }
+                };
+            } catch { }
+        }
+
+        private static string DashFormatarCurto(decimal valor) {
+            if (valor >= 1_000_000) return $"R${valor / 1_000_000:F1}M";
+            if (valor >= 1_000)     return $"R${valor / 1_000:F1}k";
+            return $"R${valor:F0}";
         }
 
         private async void BtnMenuPDV_Click(object sender, RoutedEventArgs e) {
